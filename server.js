@@ -6,9 +6,9 @@ app.use(cors()); // Allow requests from frontend
 
 // Sample JSON Data
 const data = [
-  { id: 1, name: "Alice", age: 25 },
-  { id: 2, name: "Bob", age: 30 },
-  { id: 3, name: "Charlie", age: 22 }
+  { id: 1, name: "vishnu", age: 25 },
+  { id: 2, name: "varun", age: 30 },
+  { id: 3, name: "charan", age: 22 }
 ];
 
 // GET API to send JSON data

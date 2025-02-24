@@ -21,8 +21,8 @@ const signIn = async (req, res) => {
           res.cookie("db", token, {
               httpOnly: true, // Secure, prevents XSS
               secure: process.env.NODE_ENV === "production",
-              sameSite: "Strict",
-              maxAge: 604800000
+              sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+              maxAge: 15 * 24 * 60 * 60 * 1000 
           });
         res.json({ success: true, email: user.email });
       } 

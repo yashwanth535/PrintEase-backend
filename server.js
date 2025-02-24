@@ -1,9 +1,8 @@
-const express = require("express");
-const cors = require("cors");
+const {  configureApp } = require("./middleware/appConfig");
+// const isAuthenticated    = require("./middleware/isAuthenticated")
+const authRoutes       = require("./routes/auth.route");
 
-const app = express();
-app.use(cors()); // Allow requests from frontend
-
+const app = configureApp();
 // Sample JSON Data
 const data = [
   { id: 1, name: "vishnu", age: 25 },
@@ -11,13 +10,20 @@ const data = [
   { id: 3, name: "charan", age: 22 }
 ];
 
-// GET API to send JSON data
 app.get("/api/users", (req, res) => {
   res.json(data);
 });
 
-// Start the server
-const PORT = 5000;
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.path}`);
+  next();
+});
+
+app.use("/",authRoutes);
+app.use("/auth", authRoutes);
+
+
+const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`listening to http://localhost:${PORT}`);
 });

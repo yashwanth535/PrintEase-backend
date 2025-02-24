@@ -1,6 +1,7 @@
 const User_Collection = require('../models/User_Collection');
 const { comparePassword } = require('../middleware/bcrypt');
 const { hashPassword } = require('../middleware/bcrypt');
+const { generateToken ,verifyToken} = require("../config/jwt");
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 
@@ -16,26 +17,13 @@ const signIn = async (req, res) => {
     if (user) {
       const isMatch = await comparePassword(password, user.pass);
       if (isMatch) {
-        const dbName = email.replace(/[@.]/g, '_'); // Replace both `@` and `.` with `_`
-        const new_url = `${process.env.URL_PARTONE}${dbName}${process.env.URL_PARTTWO}`;
-        if (mongoose.connection.readyState !== 0) {
-          console.log('Closing existing connection...');
-          await mongoose.disconnect();
-          await waitForDisconnection(); // Ensure the disconnection is complete
-        }
-        else{
-          console.log("no connection already");
-        }
-        await mongoose.connect(new_url)
-          .then(() => {
-            console.log('Connected to database:', dbName);
-          })
-          .catch((error) => {
-            console.error('Error in connection:', error.message);
+          const token = generateToken(email);
+          res.cookie("db", token, {
+              httpOnly: true, // Secure, prevents XSS
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "Strict",
+              maxAge: 604800000
           });
-
-        req.session.user = { email: user.email };
-        console.log('Created the session user ' + JSON.stringify(req.session.user));
         res.json({ success: true, email: user.email });
       } 
       else {
@@ -51,28 +39,11 @@ const signIn = async (req, res) => {
 };
 
 
-
-async function waitForDisconnection(retries = 5, delay = 500) {
-  while (mongoose.connection.readyState !== 0 && retries > 0) {
-    console.log('Waiting for disconnection...');
-    await new Promise((resolve) => setTimeout(resolve, delay));
-    retries--;
-  }
-
-  if (mongoose.connection.readyState !== 0) {
-    throw new Error('Failed to disconnect after retries');
-  }
-}
-
 // ---------------------------------------------------------------------------------------------------------------------------------------
 const logout = async (req, res) => {
   console.log("logout encountered");
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ message: "Logout failed" });
-    }
-    res.json({ success: true, message: "Logged out successfully" }); // ✅ Send success response
-  });
+  res.clearCookie("db");
+  res.json({ success: true, message: "Logged out successfully" });
 };
 
 
@@ -123,8 +94,15 @@ const generate_otp=async (req, res) => {
   }
 
   const otp = generateOTP();
-  req.session.otp = otp;
+  
   console.log("otp is:" + otp);
+  const otp_token = generateToken(otp);
+  res.cookie("otp", otp_token, {
+      httpOnly: true, // Secure, prevents XSS
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 604800000
+  });
 
   // Email options
   const mailOptions = {
@@ -150,7 +128,9 @@ const generate_otp=async (req, res) => {
 const verify_otp=(req,res)=>{
   const otpval=req.body.otpval;
   console.log('recieved otp is '+otpval);
-  if(req.session.otp==otpval){
+  const otp_json = verifyToken(req.cookies.otp)
+  console.log(otp_json.userId);
+  if(otp_json.userId==otpval){
     console.log("otp is correct");
     res.status(200).json({message : 'otp is correct'});
   }
@@ -183,8 +163,6 @@ const signUp=async (req, res) => {
           .catch((error) => {
             console.error('Error in connection:', error.message);
           });
-    req.session.user = { email: newUser.email };
-    console.log('Created the session user ' + JSON.stringify(req.session.user));
     res.json({ email: newUser.email,message: 'Registration successful, please login' });
   } catch (err) {
     console.error('Error during registration:', err);
@@ -208,6 +186,24 @@ const reset_password=async (req,res)=>{
 }
 }
 // ---------------------------------------------------------------------------------------------------------------------------------------
+const is_Authenticated = async (req, res) => {
+  console.log("inside Authentication");
+  try {
+    const db_json = verifyToken(req.cookies.db); // Verify and decode the JWT
+    console.log(db_json);
+    if (db_json) {
+      return res.status(200).json({ authenticated: true, user: db_json });
+    } else {
+      return res.status(401).json({ authenticated: false, message: "Invalid token" });
+    }
+  } catch (error) {
+    return res.status(401).json({ authenticated: false, message: "Authentication failed" });
+  }
+};
+
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------
 module.exports = {
   signIn,
   signUp,
@@ -215,5 +211,6 @@ module.exports = {
   user_exists,
   generate_otp,
   verify_otp,
-  reset_password
+  reset_password,
+  is_Authenticated,
 };

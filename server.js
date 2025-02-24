@@ -1,9 +1,8 @@
-const {  configureApp } = require("./middleware/appConfig");
-// const isAuthenticated    = require("./middleware/isAuthenticated")
+const {  configureApp } = require("./config/appConfig");
 const authRoutes       = require("./routes/auth.route");
 
 const app = configureApp();
-// Sample JSON Data
+
 const data = [
   { id: 1, name: "vishnu", age: 25 },
   { id: 2, name: "varun", age: 30 },
@@ -21,6 +20,7 @@ app.use((req, res, next) => {
 
 app.use("/",authRoutes);
 app.use("/auth", authRoutes);
+
 
 
 const PORT = 3000;

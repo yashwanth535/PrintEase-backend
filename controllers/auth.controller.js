@@ -1,4 +1,4 @@
-const User_Collection = require('../models/User_Collection');
+const {Vendor, Customer } = require('../models/User_Collection');
 const { comparePassword } = require('../middleware/bcrypt');
 const { hashPassword } = require('../middleware/bcrypt');
 const { generateToken ,verifyToken} = require("../config/jwt");
@@ -10,10 +10,16 @@ const mongoose = require('mongoose');
 // ---------------------------------------------------------------------------------------------------------------------------------------
 const signIn = async (req, res) => {
   console.log("entered signin POST form read");
-  const { email, password } = req.body;
+  const { email, password,isVendor} = req.body;
 
   try {
-    const user = await User_Collection.findOne({ email: email });
+    let user;
+    if(isVendor){
+      user = await Vendor.findOne({ email: email});
+    }
+    else{
+      user = await Customer.findOne({ email: email });
+    }
     if (user) {
       const isMatch = await comparePassword(password, user.pass);
       if (isMatch) {
@@ -56,11 +62,17 @@ const logout = async (req, res) => {
 
 const user_exists=async (req, res) => {
   console.log("inside userExists route");
-  const { email} = req.body;
+  const { email, isVendor } = req.body;
 
   try {
 
-    const user = await User_Collection.findOne({ email: email });
+    if(isVendor){
+      user = await Vendor.findOne({ email: email});
+    }
+    else{
+      user = await Customer.findOne({ email: email });
+    }
+
     if (user) {
       console.log("user exists");
       return res.status(400).json({ message: 'Email is already registered.' });
@@ -130,9 +142,12 @@ const generate_otp=async (req, res) => {
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
 const verify_otp=(req,res)=>{
-  const otpval=req.body.otpval;
+  const otpval=req.body.otp;
   console.log('recieved otp is '+otpval);
-  const otp_json = verifyToken(req.cookies.otp)
+  const otp_json = verifyToken(req.cookies.otp);
+  if (!otp_json) {
+    return res.status(400).json({ error: "Invalid or expired OTP" });
+}
   console.log(otp_json.userId);
   if(otp_json.userId==otpval){
     console.log("otp is correct");
@@ -146,40 +161,48 @@ const verify_otp=(req,res)=>{
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-const signUp=async (req, res) => {
+const signUp = async (req, res) => {
   console.log("in signup POST read");
-  const { email, password } = req.body;
+  const { email, password, isVendor } = req.body;
 
   try {
     const hashedPassword = await hashPassword(password);
-    const newUser = new User_Collection({ email: email, pass: hashedPassword });
-    await newUser.save();
-    const dbName = email.replace(/[@.]/g, '_'); // Replace both `@` and `.` with `_`
-        const new_url = `${process.env.URL_PARTONE}${dbName}${process.env.URL_PARTTWO}`;
-        if (mongoose.connection.readyState !== 0) {
-          console.log('Closing existing connection...');
-          await mongoose.disconnect();
-        }
-        await mongoose.connect(new_url)
-          .then(() => {
-            console.log('Connected to database:', dbName);
-          })
-          .catch((error) => {
-            console.error('Error in connection:', error.message);
-          });
-    res.json({ email: newUser.email,message: 'Registration successful, please login' });
+    let newUser; // Declare it before the if-else
+
+    if (isVendor) {
+      newUser = new Vendor({ email: email, pass: hashedPassword });
+    } else {
+      newUser = new Customer({ email: email, pass: hashedPassword });
+    }
+
+    await newUser.save(); // Save after assigning newUser
+    const token = generateToken(email);
+    res.cookie("db", token, {
+        httpOnly: true, // Secure, prevents XSS
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        maxAge: 15 * 24 * 60 * 60 * 1000 
+    });
+    res.json({ email: newUser.email, message: 'Registration successful, please login' });
   } catch (err) {
     console.error('Error during registration:', err);
     res.status(500).send('Internal Server Error');
   }
 };
 
+
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
 const reset_password=async (req,res)=>{
-  const { email, password } = req.body;
+  const { email, password ,isVendor} = req.body;
   try {
-    const user=await User_Collection.findOne({email});
+    let user;
+    if(isVendor){
+      user=await Vendor.findOne({email});
+    }
+    else{
+      user=await Customer.findOne({email});
+    }
     const hashedPassword = await hashPassword(password);
     user.pass = hashedPassword;
     await user.save();

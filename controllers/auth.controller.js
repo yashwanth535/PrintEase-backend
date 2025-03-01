@@ -23,13 +23,20 @@ const signIn = async (req, res) => {
     if (user) {
       const isMatch = await comparePassword(password, user.pass);
       if (isMatch) {
-          const token = generateToken(email);
-          res.cookie("db", token, {
-              httpOnly: true, // Secure, prevents XSS
-              secure: process.env.NODE_ENV === "production",
-              sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-              maxAge: 15 * 24 * 60 * 60 * 1000 
-          });
+          var token = generateToken(email);
+          const cookies = [
+            { name: "db", value: token },
+            { name: "type", value: generateToken(isVendor ? "vendor" : "user") }
+          ];
+        cookies.forEach(({ name, value }) => {
+            res.cookie(name, value, {
+                httpOnly: true, // Secure, prevents XSS
+                secure: process.env.NODE_ENV === "production",
+                sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+                maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
+            });
+        });
+        
         res.json({ success: true, email: user.email });
       } 
       else {
@@ -48,6 +55,11 @@ const signIn = async (req, res) => {
 // ---------------------------------------------------------------------------------------------------------------------------------------
 const logout = async (req, res) => {
   console.log("logout encountered");
+  res.clearCookie("type", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // Must match the cookie settings
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+  });
   res.clearCookie("db", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production", // Must match the cookie settings
@@ -174,15 +186,30 @@ const signUp = async (req, res) => {
     } else {
       newUser = new Customer({ email: email, pass: hashedPassword });
     }
-
+        const dbName = email.replace(/[@.]/g, '_');
+        try {
+          const db = mongoose.connection.db; // Get the connected database
+          const collection = db.collection(dbName); // Reference the collection
+          // Insert a sample document (MongoDB auto-creates the collection)
+          await collection.insertOne({ message: "Collection created successfully!" });
+          console.log(`Collection '${collectionName}' created and document inserted.`);
+        } catch (error) {
+            console.error("Error creating collection:", error);
+        }
     await newUser.save(); // Save after assigning newUser
-    const token = generateToken(email);
-    res.cookie("db", token, {
-        httpOnly: true, // Secure, prevents XSS
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-        maxAge: 15 * 24 * 60 * 60 * 1000 
-    });
+    var token = generateToken(email);
+          const cookies = [
+            { name: "db", value: token },
+            { name: "type", value: generateToken(isVendor ? "vendor" : "user") }
+          ];
+        cookies.forEach(({ name, value }) => {
+            res.cookie(name, value, {
+                httpOnly: true, // Secure, prevents XSS
+                secure: process.env.NODE_ENV === "production",
+                sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+                maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
+            });
+        });
     res.json({ email: newUser.email, message: 'Registration successful, please login' });
   } catch (err) {
     console.error('Error during registration:', err);
@@ -216,10 +243,10 @@ const reset_password=async (req,res)=>{
 const is_Authenticated = async (req, res) => {
   console.log("inside Authentication");
   try {
-    const db_json = verifyToken(req.cookies.db); // Verify and decode the JWT
-    console.log(db_json);
-    if (db_json) {
-      return res.status(200).json({ authenticated: true, user: db_json });
+    const type_json = verifyToken(req.cookies.type); // Verify and decode the JWT
+    console.log(type_json);
+    if (type_json) {
+      return res.status(200).json({ authenticated: true, role: type_json.userId});
     } else {
       return res.status(401).json({ authenticated: false, message: "Invalid token" });
     }

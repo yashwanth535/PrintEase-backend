@@ -134,7 +134,7 @@ const generate_otp=async (req, res) => {
 
   // Email options
   const mailOptions = {
-    from: '"moneymind" <verify.moneymind@gmail.com>', // Corrected email format
+    from: '"printease" <verify.printease@gmail.com>', // Corrected email format
     to: email, // Recipient's email address
     subject: 'OTP verification!', // Subject of the email
     text: otp +"  "+text+"\n Do not share with any body", // Plain text body
@@ -144,6 +144,7 @@ const generate_otp=async (req, res) => {
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log("not success");
+      console.log(error);
       return res.status(400).json({ message: 'Please enter a valid email address.' });
     }
     console.log("success");
@@ -186,30 +187,39 @@ const signUp = async (req, res) => {
     } else {
       newUser = new Customer({ email: email, pass: hashedPassword });
     }
-        const dbName = email.replace(/[@.]/g, '_');
-        try {
-          const db = mongoose.connection.db; // Get the connected database
-          const collection = db.collection(dbName); // Reference the collection
-          // Insert a sample document (MongoDB auto-creates the collection)
-          await collection.insertOne({ message: "Collection created successfully!" });
-          console.log(`Collection '${collectionName}' created and document inserted.`);
-        } catch (error) {
-            console.error("Error creating collection:", error);
-        }
-    await newUser.save(); // Save after assigning newUser
+
+    // Create collection name with suffix based on user type
+    const emailBase = email.replace(/[@.]/g, '_');
+    const collectionName = isVendor ? `${emailBase}_vendor` : `${emailBase}_customer`;
+    
+    try {
+      const db = mongoose.connection.db;
+      const collection = db.collection(collectionName);
+      await collection.insertOne({ 
+        message: "Collection created successfully!",
+        userType: isVendor ? "vendor" : "customer",
+        createdAt: new Date()
+      });
+      console.log(`Collection '${collectionName}' created and document inserted.`);
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      throw error; // Propagate the error to be caught by the outer try-catch
+    }
+
+    await newUser.save();
     var token = generateToken(email);
-          const cookies = [
-            { name: "db", value: token },
-            { name: "type", value: generateToken(isVendor ? "vendor" : "user") }
-          ];
-        cookies.forEach(({ name, value }) => {
-            res.cookie(name, value, {
-                httpOnly: true, // Secure, prevents XSS
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-                maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
-            });
-        });
+    const cookies = [
+      { name: "db", value: token },
+      { name: "type", value: generateToken(isVendor ? "vendor" : "user") }
+    ];
+    cookies.forEach(({ name, value }) => {
+      res.cookie(name, value, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
+      });
+    });
     res.json({ email: newUser.email, message: 'Registration successful, please login' });
   } catch (err) {
     console.error('Error during registration:', err);

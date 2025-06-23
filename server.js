@@ -1,16 +1,15 @@
 const {  configureApp } = require("./config/appConfig");
 const authRoutes       = require("./routes/auth.route");
+const pdfRoutes        = require("./routes/pdfRoutes");
 
 const app = configureApp();
 
-const data = [
-  { id: 1, name: "vishnu", age: 25 },
-  { id: 2, name: "varun", age: 30 },
-  { id: 3, name: "charan", age: 22 }
-];
+app.get("/ping", (req, res) => {
+  res.status(204).end(); 
+});
 
-app.get("/api/users", (req, res) => {
-  res.json(data);
+app.get("/api/ping", (req, res) => {
+  res.send("man of the math of the tournament of the cricket")
 });
 
 app.use((req, res, next) => {
@@ -20,6 +19,7 @@ app.use((req, res, next) => {
 
 app.use("/",authRoutes);
 app.use("/auth", authRoutes);
+app.use('/api', pdfRoutes);
 
 
 

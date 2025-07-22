@@ -3,13 +3,12 @@ const express = require("express");
 const mongoose = require('mongoose');
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const {mongoConnect} = require("./mongo.config");
 
-const configureApp = () => {
+const configureApp = async () => {
   const app = express();
-
-  mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  console.log("configuring");
+  await mongoConnect();
 
   console.log("CORS Origin:", process.env.FRONTEND_URL);
   const corsOptions = {

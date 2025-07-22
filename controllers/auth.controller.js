@@ -10,36 +10,38 @@ const mongoose = require('mongoose');
 // ---------------------------------------------------------------------------------------------------------------------------------------
 const signIn = async (req, res) => {
   console.log("entered signin POST form read");
-  const { email, password,isVendor} = req.body;
+  const { email, password, isVendor } = req.body;
 
   try {
     let user;
-    if(isVendor){
-      user = await Vendor.findOne({ email: email});
+    if (isVendor) {
+      user = await Vendor.findOne({ email });
+    } else {
+      user = await Customer.findOne({ email });
     }
-    else{
-      user = await Customer.findOne({ email: email });
-    }
+
     if (user) {
       const isMatch = await comparePassword(password, user.pass);
       if (isMatch) {
-          var token = generateToken(email);
-          const cookies = [
-            { name: "db", value: token },
-            { name: "type", value: generateToken(isVendor ? "vendor" : "user") }
-          ];
-        cookies.forEach(({ name, value }) => {
-            res.cookie(name, value, {
-                httpOnly: true, // Secure, prevents XSS
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-                maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
-            });
+        const email_token = generateToken(email);
+        const collection_token = generateToken(user.collection_name);
+        const type_token = generateToken(isVendor ? "vendor" : "user");
+
+        const userData = {
+          email: email_token,
+          database: collection_token,
+          type: type_token
+        };
+
+        res.cookie("userData", JSON.stringify(userData), {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+          maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
         });
-        
+
         res.json({ success: true, email: user.email });
-      } 
-      else {
+      } else {
         res.json({ success: false, message: 'Invalid password' });
       }
     } else {
@@ -52,15 +54,13 @@ const signIn = async (req, res) => {
 };
 
 
+
 // ---------------------------------------------------------------------------------------------------------------------------------------
 const logout = async (req, res) => {
   console.log("logout encountered");
-  res.clearCookie("type", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // Must match the cookie settings
-    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-  });
-  res.clearCookie("db", {
+  console.log("Cookies before clearing:", Object.keys(req.cookies));
+
+  res.clearCookie("userData", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production", // Must match the cookie settings
     sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
@@ -180,7 +180,7 @@ const signUp = async (req, res) => {
 
   try {
     const hashedPassword = await hashPassword(password);
-    let newUser; // Declare it before the if-else
+    let newUser; 
 
     if (isVendor) {
       newUser = new Vendor({ email: email, pass: hashedPassword });
@@ -188,7 +188,6 @@ const signUp = async (req, res) => {
       newUser = new Customer({ email: email, pass: hashedPassword });
     }
 
-    // Create collection name with suffix based on user type
     const emailBase = email.replace(/[@.]/g, '_');
     const collectionName = isVendor ? `${emailBase}_vendor` : `${emailBase}_customer`;
     
@@ -205,21 +204,23 @@ const signUp = async (req, res) => {
       console.error("Error creating collection:", error);
       throw error; // Propagate the error to be caught by the outer try-catch
     }
-
+    newUser.collection_name = collectionName;
     await newUser.save();
-    var token = generateToken(email);
-    const cookies = [
-      { name: "db", value: token },
-      { name: "type", value: generateToken(isVendor ? "vendor" : "user") }
-    ];
-    cookies.forEach(({ name, value }) => {
-      res.cookie(name, value, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-        maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
-      });
+    var email_token = generateToken(email);
+    var collection_token = generateToken(collectionName)
+    const userData = {
+      email: email_token,
+      database: collection_token,
+      type: generateToken(isVendor ? "vendor" : "user")
+    };
+    
+    res.cookie("userData", JSON.stringify(userData), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
     });
+    
     res.json({ email: newUser.email, message: 'Registration successful, please login' });
   } catch (err) {
     console.error('Error during registration:', err);
@@ -253,18 +254,31 @@ const reset_password=async (req,res)=>{
 const is_Authenticated = async (req, res) => {
   console.log("inside Authentication");
   try {
-    const type_json = verifyToken(req.cookies.type); // Verify and decode the JWT
-    console.log(type_json);
-    if (type_json) {
-      return res.status(200).json({ authenticated: true, role: type_json.userId});
-    } else {
-      return res.status(401).json({ authenticated: false, message: "Invalid token" });
+    const userDataCookie = req.cookies.userData;
+    if (!userDataCookie) {
+      console.log("cookie not found");
+      return res.status(401).json({ authenticated: false, message: "No authentication cookie found" });
     }
+
+    const userData = JSON.parse(userDataCookie); 
+    
+    const typeDecoded = verifyToken(userData.type);
+    if (typeDecoded) {
+      console.log("auth success");
+      return res.status(200).json({ 
+        authenticated: true, 
+        role: typeDecoded.userId,
+      });
+    } else {
+      console.log("type not decoded");
+      return res.status(401).json({ authenticated: false, message: "Invalid type token" });
+    }
+
   } catch (error) {
+    console.error("Authentication error:", error);
     return res.status(401).json({ authenticated: false, message: "Authentication failed" });
   }
 };
-
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------

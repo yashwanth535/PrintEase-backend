@@ -10,14 +10,21 @@ const configureApp = async () => {
   console.log("configuring");
   await mongoConnect();
 
+  const allowedOrigins = process.env.FRONTEND_URL.split(",");
   console.log("CORS Origin:", process.env.FRONTEND_URL);
+
   const corsOptions = {
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
   };
-  
   app.use(cors(corsOptions));
   app.options('*', cors(corsOptions)); // Handle preflight
   

@@ -4,7 +4,7 @@ const pdfRoutes         = require("./routes/pdf.routes");
 const vendorRoutes      = require("./routes/vendor.routes");
 const vendorsRoutes     = require("./routes/vendors.routes");
 const {checkMongoConnection} = require("./config/mongo.config");
-// const userRoutes        = require("./routes/userRoutes");
+const userRoutes        = require("./routes/user.routes");
 
 const startServer = async () => {
 const app = await configureApp();
@@ -21,8 +21,9 @@ app.use("/",authRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/file', pdfRoutes);
 app.use('/api/vendor',vendorRoutes);
-// app.use('/api/user',userRoutes);
+app.use('/api/user',userRoutes);
 app.use('/api/vendors',vendorsRoutes);
+app.use('/api/upload-file',pdfRoutes);
 
 
 app.get("/ping", (req, res) => {

@@ -1,21 +1,19 @@
-const supabase = require('../config/supabaseConfig');
+const supabase = require('../config/supabase.config');
 const multer = require('multer');
+
+// Sanitize filenames to remove unsafe characters
+const sanitizeFileName = (filename) => {
+  return filename.replace(/[^a-zA-Z0-9._-]/g, '-'); // replace anything unsafe with hyphen
+};
 
 // Configure multer for memory storage
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed!'), false);
-    }
-  },
-}).single('pdf');
+}).single('file'); // Accepts any type of file
 
-const uploadPdf = async (req, res) => {
-  console.log("uploading pdf");
+const uploadFile = async (req, res) => {
+  console.log("Uploading file");
   upload(req, res, async (err) => {
     try {
       if (err) return res.status(400).json({ error: err.message });
@@ -23,15 +21,14 @@ const uploadPdf = async (req, res) => {
 
       const file = req.file;
       const timestamp = Date.now();
-      const fileName = `${timestamp}-${file.originalname}`;
+      const safeFileName = `${timestamp}-${sanitizeFileName(file.originalname)}`;
 
-      // Upload file to Supabase Storage (Using "printease" bucket)
       const { data, error } = await supabase.storage
-        .from('printease') // Updated bucket name here
-        .upload(fileName, file.buffer, {
-          contentType: 'application/pdf',
+        .from('printease')
+        .upload(safeFileName, file.buffer, {
+          contentType: file.mimetype || 'application/octet-stream',
           cacheControl: '3600',
-          upsert: true, // Allows overwriting existing files
+          upsert: true,
         });
 
       if (error) {
@@ -39,12 +36,11 @@ const uploadPdf = async (req, res) => {
         return res.status(500).json({ error: 'Error uploading to storage' });
       }
 
-      // Get the public URL of the uploaded file
-      const publicUrl = supabase.storage.from('printease').getPublicUrl(fileName).data.publicUrl;
+      const publicUrl = supabase.storage.from('printease').getPublicUrl(safeFileName).data.publicUrl;
 
       res.status(200).json({
         message: 'File uploaded successfully',
-        fileName,
+        fileName: safeFileName,
         url: publicUrl,
       });
     } catch (error) {
@@ -54,4 +50,4 @@ const uploadPdf = async (req, res) => {
   });
 };
 
-module.exports = { uploadPdf };
+module.exports = { uploadFile };

@@ -1,7 +1,7 @@
-const {Vendor, Customer } = require('../models/User_Collection');
+const {Vendor, User } = require('../models/User_Collection');
 const { comparePassword } = require('../middleware/bcrypt');
 const { hashPassword } = require('../middleware/bcrypt');
-const { generateToken ,verifyToken} = require("../config/jwt");
+const { generateToken ,verifyToken} = require("../config/jwt.config");
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 
@@ -17,7 +17,7 @@ const signIn = async (req, res) => {
     if (isVendor) {
       user = await Vendor.findOne({ email });
     } else {
-      user = await Customer.findOne({ email });
+      user = await User.findOne({ email });
     }
 
     if (user) {
@@ -82,7 +82,7 @@ const user_exists=async (req, res) => {
       user = await Vendor.findOne({ email: email});
     }
     else{
-      user = await Customer.findOne({ email: email });
+      user = await User.findOne({ email: email });
     }
 
     if (user) {
@@ -185,18 +185,18 @@ const signUp = async (req, res) => {
     if (isVendor) {
       newUser = new Vendor({ email: email, pass: hashedPassword });
     } else {
-      newUser = new Customer({ email: email, pass: hashedPassword });
+      newUser = new User({ email: email, pass: hashedPassword });
     }
 
     const emailBase = email.replace(/[@.]/g, '_');
-    const collectionName = isVendor ? `${emailBase}_vendor` : `${emailBase}_customer`;
+    const collectionName = isVendor ? `${emailBase}_vendor` : `${emailBase}_user`;
     
     try {
       const db = mongoose.connection.db;
       const collection = db.collection(collectionName);
       await collection.insertOne({ 
         message: "Collection created successfully!",
-        userType: isVendor ? "vendor" : "customer",
+        userType: isVendor ? "vendor" : "user",
         createdAt: new Date()
       });
       console.log(`Collection '${collectionName}' created and document inserted.`);
@@ -239,7 +239,7 @@ const reset_password=async (req,res)=>{
       user=await Vendor.findOne({email});
     }
     else{
-      user=await Customer.findOne({email});
+      user=await User.findOne({email});
     }
     const hashedPassword = await hashPassword(password);
     user.pass = hashedPassword;

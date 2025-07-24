@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const authMiddleware = require("../middleware/Auth.middlewear");
 
-const { updateProfile, getProfile } = require("../controllers/vendor.controller");
+const { updateProfile, getProfile ,sendCookie} = require("../controllers/vendor.controller");
 
-router.get('/profile', getProfile);
-router.post('/updateProfile', updateProfile);
+router.get('/profile', authMiddleware, getProfile);
+router.post('/updateProfile', authMiddleware, updateProfile);
+router.get('/dev',sendCookie);
 
 module.exports = router;

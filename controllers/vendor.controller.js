@@ -1,35 +1,12 @@
 const { Vendor } = require("../models/User_Collection");
-const { verifyToken } = require("../config/jwt");
+const { generateToken,verifyToken } = require("../config/jwt.config");
 
 const updateProfile = async (req, res) => {
   try {
     console.log("⏳ [updateProfile] Request received");
-
-    const userDataCookie = req.cookies.userData;
-    if (!userDataCookie) {
-      console.log("❌ [updateProfile] Cookie not found");
-      return res.status(401).json({ success: false, message: "No auth token" });
-    }
-
-    const userData = JSON.parse(userDataCookie);
-    console.log("✅ [updateProfile] Parsed cookie:", userData);
-
-    const decodedToken = verifyToken(userData.email);
-    console.log("✅ [updateProfile] Decoded token:", decodedToken);
-
-    const email = decodedToken?.userId;
-    if (!email) {
-      console.log("❌ [updateProfile] Invalid token: userId not found");
-      return res.status(401).json({ success: false, message: "Invalid token" });
-    }
+    const email = req.user.email;
 
     const existingVendor = await Vendor.findOne({ email });
-    if (!existingVendor) {
-      console.log("❌ [updateProfile] Vendor not found for email:", email);
-      return res.status(404).json({ success: false, message: "Vendor not found" });
-    }
-
-    console.log("✅ [updateProfile] Vendor found:", existingVendor.email);
 
     // Deep merge function
     const deepMerge = (target, source) => {
@@ -84,13 +61,7 @@ const updateProfile = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-    const userDataCookie = req.cookies.userData;
-    if (!userDataCookie) {
-      console.log("cookie not found");
-      return res.status(401).json({ success: false, message: "No auth token" });
-    }
-    const userData = JSON.parse(userDataCookie);
-    const email = verifyToken(userData.email).userId;
+    const email = req.user.email;
     if (!email) return res.status(401).json({ success: false, message: "Invalid token" });
     const vendor = await Vendor.findOne({ email });
     if (!vendor) return res.status(404).json({ success: false, message: "Vendor not found" });
@@ -101,4 +72,28 @@ const getProfile = async (req, res) => {
   }
 };
 
-module.exports = { updateProfile, getProfile };
+const sendCookie = async (req, res) => {
+  const email = "yashwanth.lumia535@gmail.com";
+  const emailBase = email.replace(/[@.]/g, '_');
+  const collectionName = `${emailBase}_vendor`;
+
+  const email_token = generateToken(email);
+  const collection_token = generateToken(collectionName);
+  const userData = {
+    email: email_token,
+    database: collection_token,
+    type: generateToken("vendor"),
+  };
+
+  res.cookie("userData", JSON.stringify(userData), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
+  });
+
+  res.sendStatus(200); // ✅ send only status, no body
+};
+
+
+module.exports = { updateProfile, getProfile ,sendCookie };

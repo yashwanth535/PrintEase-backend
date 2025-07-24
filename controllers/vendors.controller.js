@@ -1,6 +1,6 @@
 // GET /vendors/locations
 const {Vendor} = require("../models/User_Collection");
-const { verifyToken } = require("../config/jwt");
+const { generateToken,verifyToken } = require("../config/jwt.config");
 
 const getLocations = async (req, res) => {
   try {

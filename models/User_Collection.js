@@ -95,13 +95,13 @@ const vendorSchema = new mongoose.Schema({
 });
 
 // CUSTOMER SCHEMA
-const customerSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   pass: { type: String, required: true }
 });
 
 // ✅ Use existing model if already compiled
 const Vendor = mongoose.models.Vendor || mongoose.model('Vendor', vendorSchema, 'vendors');
-const Customer = mongoose.models.Customer || mongoose.model('Customer', customerSchema, 'customers');
+const User = mongoose.models.User || mongoose.model('User', userSchema, 'users');
 
-module.exports = { Vendor, Customer };
+module.exports = { Vendor, User };

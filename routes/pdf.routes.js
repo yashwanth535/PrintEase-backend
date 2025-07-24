@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { uploadPdf } = require('../controllers/pdf.controller');
+const { uploadFile } = require('../controllers/pdf.controller');
 
-router.post('/upload-pdf', uploadPdf);
+router.post('/', uploadFile);
 
 module.exports = router; 

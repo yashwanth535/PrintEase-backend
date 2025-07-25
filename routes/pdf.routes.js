@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { uploadFile } = require('../controllers/pdf.controller');
+const { signedUrl } = require('../controllers/pdf.controller');
 
-router.post('/', uploadFile);
+router.post('/signed-url',signedUrl)
 
 module.exports = router; 

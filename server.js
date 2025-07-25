@@ -23,7 +23,6 @@ app.use('/api/file', pdfRoutes);
 app.use('/api/vendor',vendorRoutes);
 app.use('/api/user',userRoutes);
 app.use('/api/vendors',vendorsRoutes);
-app.use('/api/upload-file',pdfRoutes);
 
 
 app.get("/ping", (req, res) => {

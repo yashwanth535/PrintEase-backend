@@ -1,11 +1,11 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const dotenv = require('dotenv');
-const {mongoConnect} = require("./mongo.config");
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import bodyParser from 'body-parser';
+import session from 'express-session';
+import dotenv from 'dotenv';
+import { mongoConnect } from "./mongo.config.js";
 dotenv.config();
 
 const configureApp = async () => {
@@ -52,4 +52,4 @@ const configureApp = async () => {
   return app;
 };
 
-module.exports = { configureApp }; 
+export { configureApp }; 

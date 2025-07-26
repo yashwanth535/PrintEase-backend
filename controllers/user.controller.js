@@ -1,4 +1,4 @@
-const { generateToken,verifyToken } = require("../config/jwt.config");
+import { generateToken, verifyToken } from "../config/jwt.config.js";
 
 const sendCookie = async (req, res) => {
   const email = "yashwanth.lumia535@gmail.com";
@@ -23,4 +23,4 @@ const sendCookie = async (req, res) => {
   res.sendStatus(200); // ✅ send only status, no body
 };
 
-module.exports = {sendCookie};
+export { sendCookie };

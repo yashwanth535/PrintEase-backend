@@ -1,9 +1,8 @@
-const {Vendor, User } = require('../models/User_Collection');
-const { comparePassword } = require('../middleware/bcrypt');
-const { hashPassword } = require('../middleware/bcrypt');
-const { generateToken ,verifyToken} = require("../config/jwt.config");
-const nodemailer = require('nodemailer');
-const mongoose = require('mongoose');
+import { Vendor, User } from '../models/User_Collection.js';
+import { comparePassword, hashPassword } from '../middleware/bcrypt.js';
+import { generateToken, verifyToken } from "../config/jwt.config.js";
+import nodemailer from 'nodemailer';
+import mongoose from 'mongoose';
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
@@ -282,7 +281,7 @@ const is_Authenticated = async (req, res) => {
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
-module.exports = {
+export {
   signIn,
   signUp,
   logout,

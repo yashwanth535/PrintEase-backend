@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // VENDOR SCHEMA
 const vendorSchema = new mongoose.Schema({
@@ -104,4 +104,4 @@ const userSchema = new mongoose.Schema({
 const Vendor = mongoose.models.Vendor || mongoose.model('Vendor', vendorSchema, 'vendors');
 const User = mongoose.models.User || mongoose.model('User', userSchema, 'users');
 
-module.exports = { Vendor, User };
+export { Vendor, User };

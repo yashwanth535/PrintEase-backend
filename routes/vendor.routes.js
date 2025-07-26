@@ -1,11 +1,11 @@
-const express = require("express");
-const router = express.Router();
-const authMiddleware = require("../middleware/Auth.middlewear");
+import express from "express";
+import authMiddleware from "../middleware/Auth.middlewear.js";
+import { updateProfile, getProfile, sendCookie } from "../controllers/vendor.controller.js";
 
-const { updateProfile, getProfile ,sendCookie} = require("../controllers/vendor.controller");
+const router = express.Router();
 
 router.get('/profile', authMiddleware, getProfile);
 router.post('/updateProfile', authMiddleware, updateProfile);
-router.get('/dev',sendCookie);
+router.get('/dev', sendCookie);
 
-module.exports = router;
+export default router;

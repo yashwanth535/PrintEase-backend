@@ -1,7 +1,10 @@
-const {getLocations} = require("../controllers/vendors.controller")
-const express = require("express");
+import { getLocations, getVendors, getVendorById } from "../controllers/vendors.controller.js";
+import express from "express";
+
 const router = express.Router();
 
-router.get("/locations",getLocations);
+router.get("/locations", getLocations);
+router.get("/", getVendors);
+router.get("/:id", getVendorById);
 
-module.exports = router;
+export default router;

@@ -1,7 +1,10 @@
-const express = require("express");
+import express from "express";
+import { sendCookie } from "../controllers/user.controller.js";
+import { signedUrl } from '../controllers/pdf.controller.js';
+
 const router = express.Router();
-const {sendCookie} = require("../controllers/user.controller");
 
-router.get("/dev",sendCookie);
+router.post('/signed-url', signedUrl);
+router.get("/dev", sendCookie);
 
-module.exports = router;
+export default router;

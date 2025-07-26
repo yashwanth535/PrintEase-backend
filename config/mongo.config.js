@@ -1,5 +1,8 @@
 // config/mongoConnect.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const mongoConnect = async () => {
   const MONGODB_URI = process.env.MONGODB_URI;
@@ -64,4 +67,4 @@ const checkMongoConnection = async (req, res) => {
   }
 };
 
-module.exports ={mongoConnect,checkMongoConnection};
+export { mongoConnect, checkMongoConnection };

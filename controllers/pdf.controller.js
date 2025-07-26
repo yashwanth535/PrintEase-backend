@@ -1,5 +1,5 @@
-const supabase = require('../config/supabase.config');
-const multer = require('multer');
+import supabase from '../config/supabase.config.js';
+import multer from 'multer';
 
 // Sanitize filenames to remove unsafe characters
 const sanitizeFileName = (filename) => {
@@ -20,7 +20,7 @@ const signedUrl = async (req, res) => {
       console.error('Supabase storage error:', error);
       return res.status(500).json({ error: error.message });
     }
-    res.json({ signedUrl: data.signedUrl });
+    res.json({ signedUrl: data.signedUrl, path: fileName });
   };
 
-module.exports = { signedUrl};
+export { signedUrl };

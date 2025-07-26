@@ -1,5 +1,5 @@
-const { Vendor } = require("../models/User_Collection");
-const { generateToken,verifyToken } = require("../config/jwt.config");
+import { Vendor } from "../models/User_Collection.js";
+import { generateToken, verifyToken } from "../config/jwt.config.js";
 
 const updateProfile = async (req, res) => {
   try {
@@ -96,4 +96,4 @@ const sendCookie = async (req, res) => {
 };
 
 
-module.exports = { updateProfile, getProfile ,sendCookie };
+export { updateProfile, getProfile, sendCookie };

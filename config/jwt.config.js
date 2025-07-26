@@ -1,10 +1,12 @@
-const jwt = require("jsonwebtoken");
-require("dotenv").config(); // Load environment variables
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config(); // Load environment variables
 
 // Function to generate JWT token
 const generateToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, {
-        expiresIn: "1w", // Token expires in 1 hour
+        expiresIn: "1w", // Token expires in 1 week
     });
 };
 
@@ -17,4 +19,4 @@ const verifyToken = (token) => {
     }
 };
 
-module.exports = { generateToken, verifyToken };
+export { generateToken, verifyToken };

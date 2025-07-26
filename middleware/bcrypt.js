@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+import bcrypt from 'bcrypt';
 
 // Define the number of salt rounds (more rounds = slower but more secure)
 const saltRounds = 10;
@@ -26,7 +26,4 @@ async function comparePassword(plainTextPassword, hashedPassword) {
 }
 
 // Export the functions to use them in other parts of your app
-module.exports = {
-    hashPassword,
-    comparePassword
-};
+export { hashPassword, comparePassword };

@@ -1,5 +1,6 @@
 import {User} from '../models/User_Collection.js';
 import {Order} from '../models/order.js';
+import { Cashfree, CFEnvironment } from "cashfree-pg";
 
 const createOrder = async (req,res) => {
     try{
@@ -145,8 +146,16 @@ const createPaymentOrder = async (req, res) => {
         // Calculate total amount
         const totalAmount = orders.reduce((sum, order) => sum + order.totalPrice, 0);
 
-        // Create Cashfree payment order
-        const cashfreePayload = {
+        // Initialize Cashfree SDK
+        const environment = process.env.NODE_ENV === 'production' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+        const cashfree = new Cashfree(
+            environment,
+            process.env.CASHFREE_CLIENT_ID,
+            process.env.CASHFREE_CLIENT_SECRET
+        );
+
+        // Create Cashfree payment order request
+        const request = {
             order_amount: totalAmount.toFixed(2),
             order_currency: "INR",
             customer_details: {
@@ -157,30 +166,13 @@ const createPaymentOrder = async (req, res) => {
             },
             order_meta: {
                 return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/u/payment-success?order_id={order_id}`
-            }
+            },
+            order_note: `PrintEase order for ${orders.length} items`
         };
 
-        const cashfreeResponse = await fetch('https://sandbox.cashfree.com/pg/orders', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-client-id': process.env.CASHFREE_CLIENT_ID,
-                'x-client-secret': process.env.CASHFREE_CLIENT_SECRET,
-                'x-api-version': '2025-01-01'
-            },
-            body: JSON.stringify(cashfreePayload)
-        });
-
-        const cashfreeData = await cashfreeResponse.json();
-
-        if (!cashfreeResponse.ok) {
-            console.error('Cashfree API Error:', cashfreeData);
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Payment gateway error',
-                error: cashfreeData
-            });
-        }
+        // Create order using Cashfree SDK
+        const response = await cashfree.PGCreateOrder(request);
+        const cashfreeData = response.data;
 
         // Store payment details in orders
         for (let order of orders) {
@@ -201,6 +193,16 @@ const createPaymentOrder = async (req, res) => {
 
     } catch (error) {
         console.error('Error creating payment order:', error);
+        
+        // Handle Cashfree SDK specific errors
+        if (error.response && error.response.data) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Payment gateway error',
+                error: error.response.data
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Error creating payment order',
@@ -213,25 +215,17 @@ const verifyPayment = async (req, res) => {
     try {
         const { orderId } = req.body;
         
-        // Verify payment with Cashfree
-        const cashfreeResponse = await fetch(`https://sandbox.cashfree.com/pg/orders/${orderId}`, {
-            method: 'GET',
-            headers: {
-                'x-client-id': process.env.CASHFREE_CLIENT_ID,
-                'x-client-secret': process.env.CASHFREE_CLIENT_SECRET,
-                'x-api-version': '2025-01-01'
-            }
-        });
+        // Initialize Cashfree SDK
+        const environment = process.env.NODE_ENV === 'production' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+        const cashfree = new Cashfree(
+            environment,
+            process.env.CASHFREE_CLIENT_ID,
+            process.env.CASHFREE_CLIENT_SECRET
+        );
 
-        const cashfreeData = await cashfreeResponse.json();
-
-        if (!cashfreeResponse.ok) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Payment verification failed',
-                error: cashfreeData
-            });
-        }
+        // Verify payment with Cashfree SDK
+        const response = await cashfree.PGFetchOrder(orderId);
+        const cashfreeData = response.data;
 
         // Check if payment is successful
         const isPaid = cashfreeData.order_status === 'PAID';
@@ -265,6 +259,16 @@ const verifyPayment = async (req, res) => {
 
     } catch (error) {
         console.error('Error verifying payment:', error);
+        
+        // Handle Cashfree SDK specific errors
+        if (error.response && error.response.data) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Payment verification failed',
+                error: error.response.data
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Error verifying payment',

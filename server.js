@@ -2,6 +2,7 @@ import { configureApp } from "./config/app.config.js";
 import authRoutes from "./routes/auth.routes.js";
 import vendorRoutes from "./routes/vendor.routes.js";
 import vendorsRoutes from "./routes/vendors.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 import { checkMongoConnection } from "./config/mongo.config.js";
 import userRoutes from "./routes/user.routes.js";
 import path from 'path';
@@ -28,6 +29,7 @@ app.use("/api/auth", authRoutes);
 app.use('/api/vendor',vendorRoutes);
 app.use('/api/user',userRoutes);
 app.use('/api/vendors',vendorsRoutes);
+app.use('/api/order',orderRoutes);
 
 
 app.get("/ping", (req, res) => {

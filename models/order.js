@@ -18,6 +18,17 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
 
+  // Payment fields
+  paymentOrderId: { type: String },
+  paymentSessionId: { type: String },
+  cfOrderId: { type: String },
+  paymentStatus: { 
+    type: String, 
+    enum: ['pending', 'paid', 'failed', 'cancelled'],
+    default: 'pending'
+  },
+  paidAt: { type: Date },
+
   createdAt: { type: Date, default: Date.now }
 });
 

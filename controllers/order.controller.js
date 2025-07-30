@@ -147,7 +147,7 @@ const createPaymentOrder = async (req, res) => {
         const totalAmount = orders.reduce((sum, order) => sum + order.totalPrice, 0);
 
         // Initialize Cashfree SDK
-        const environment = process.env.NODE_ENV === 'production' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+        const environment = process.env.PROD === 'true' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
         const cashfree = new Cashfree(
             environment,
             process.env.CASHFREE_CLIENT_ID,
@@ -165,7 +165,7 @@ const createPaymentOrder = async (req, res) => {
                 customer_phone: customerDetails.phone || "9999999999"
             },
             order_meta: {
-                return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/u/payment-success?order_id={order_id}`
+                return_url: `${process.env.FRONTEND_URL}/u/payment-success?order_id={order_id}`
             },
             order_note: `PrintEase order for ${orders.length} items`
         };
@@ -216,7 +216,7 @@ const verifyPayment = async (req, res) => {
         const { orderId } = req.body;
         
         // Initialize Cashfree SDK
-        const environment = process.env.NODE_ENV === 'production' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+        const environment = process.env.PROD === 'true' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
         const cashfree = new Cashfree(
             environment,
             process.env.CASHFREE_CLIENT_ID,

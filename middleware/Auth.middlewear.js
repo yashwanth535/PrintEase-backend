@@ -14,7 +14,9 @@ const authMiddleware = (req, res, next) => {
 
     const userData = JSON.parse(userDataCookie);
     const emailDecoded = verifyToken(userData.email);
-    
+    const typeDecoded = verifyToken(userData.type);
+    const user_idDecoded = verifyToken(userData.user_id);
+
     if (!emailDecoded) {
       console.log("❌ Invalid email token");
       return res.status(401).json({ 
@@ -23,7 +25,11 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
-    req.user = { email: emailDecoded.userId };
+    req.user = { 
+      email: emailDecoded.userId,
+      type : typeDecoded.userId,
+      id:user_idDecoded.userId
+    };
     console.log("✅ Authentication successful for:", emailDecoded.userId);
     next();
   } catch (error) {

@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
+import { loadEnv } from './loadenv.js';
 
-dotenv.config();
+loadEnv();
+
 
 const supabaseUrl = process.env.supabase_url;
 const supabaseKey = process.env.supabase_service_secret;//bypasses rls

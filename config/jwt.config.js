@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import { loadEnv } from './loadenv.js';
 
-dotenv.config(); // Load environment variables
-
+loadEnv();
 // Function to generate JWT token
 const generateToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, {

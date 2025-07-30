@@ -15,21 +15,23 @@ const signIn = async (req, res) => {
     let user;
     if (isVendor) {
       user = await Vendor.findOne({ email });
+      
     } else {
       user = await User.findOne({ email });
+      console.log(await User.find());
     }
 
     if (user) {
       const isMatch = await comparePassword(password, user.pass);
       if (isMatch) {
         const email_token = generateToken(email);
-        const collection_token = generateToken(user.collection_name);
         const type_token = generateToken(isVendor ? "vendor" : "user");
+        const user_id = generateToken(user._id);
 
         const userData = {
           email: email_token,
-          database: collection_token,
-          type: type_token
+          type: type_token,
+          user_id: user_id
         };
 
         res.cookie("userData", JSON.stringify(userData), {
@@ -76,7 +78,7 @@ const user_exists=async (req, res) => {
   const { email, isVendor } = req.body;
 
   try {
-
+    let user;
     if(isVendor){
       user = await Vendor.findOne({ email: email});
     }
@@ -107,13 +109,13 @@ const generate_otp=async (req, res) => {
   console.log("email is "+email);
   console.log("text is "+text);
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.user,
-      pass: process.env.pass, 
-    },
-  });
+  // const transporter = nodemailer.createTransport({
+  //   service: 'gmail',
+  //   auth: {
+  //     user: process.env.user,
+  //     pass: process.env.pass, 
+  //   },
+  // });
 
   function generateOTP() {
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -132,23 +134,26 @@ const generate_otp=async (req, res) => {
   });
 
   // Email options
-  const mailOptions = {
-    from: '"printease" <verify.printease@gmail.com>', // Corrected email format
-    to: email, // Recipient's email address
-    subject: 'OTP verification!', // Subject of the email
-    text: otp +"  "+text+"\n Do not share with any body", // Plain text body
-  };
+  // const mailOptions = {
+  //   from: '"printease" <verify.printease@gmail.com>', // Corrected email format
+  //   to: email, // Recipient's email address
+  //   subject: 'OTP verification!', // Subject of the email
+  //   text: otp +"  "+text+"\n Do not share with any body", // Plain text body
+  // };
 
   // Send the email
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log("not success");
-      console.log(error);
-      return res.status(400).json({ message: 'Please enter a valid email address.' });
-    }
-    console.log("success");
-    return res.status(200).json({ message: 'OTP sent successfully' }); // Send a success response
-  });
+  // transporter.sendMail(mailOptions, (error, info) => {
+  //   if (error) {
+  //     console.log("not success");
+  //     console.log(error);
+  //     return res.status(400).json({ message: 'Please enter a valid email address.' });
+  //   }
+  //   console.log("success");
+  //   return res.status(200).json({ message: 'OTP sent successfully' }); // Send a success response
+  // });
+  console.log("success");
+  return res.status(200).json({ message: 'OTP sent successfully' }); // Send a success response
+  
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -186,31 +191,15 @@ const signUp = async (req, res) => {
     } else {
       newUser = new User({ email: email, pass: hashedPassword });
     }
-
-    const emailBase = email.replace(/[@.]/g, '_');
-    const collectionName = isVendor ? `${emailBase}_vendor` : `${emailBase}_user`;
     
-    try {
-      const db = mongoose.connection.db;
-      const collection = db.collection(collectionName);
-      await collection.insertOne({ 
-        message: "Collection created successfully!",
-        userType: isVendor ? "vendor" : "user",
-        createdAt: new Date()
-      });
-      console.log(`Collection '${collectionName}' created and document inserted.`);
-    } catch (error) {
-      console.error("Error creating collection:", error);
-      throw error; // Propagate the error to be caught by the outer try-catch
-    }
-    newUser.collection_name = collectionName;
     await newUser.save();
     var email_token = generateToken(email);
-    var collection_token = generateToken(collectionName)
+    var type_token = generateToken(isVendor ? "vendor" : "user");
+    var user_id = generateToken(newUser._id);
     const userData = {
       email: email_token,
-      database: collection_token,
-      type: generateToken(isVendor ? "vendor" : "user")
+      type: type_token,
+      user_id: user_id
     };
     
     res.cookie("userData", JSON.stringify(userData), {

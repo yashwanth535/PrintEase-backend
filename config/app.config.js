@@ -4,17 +4,17 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import session from 'express-session';
-import dotenv from 'dotenv';
 import { mongoConnect } from "./mongo.config.js";
-dotenv.config();
+import { loadEnv } from './loadenv.js';
+
+loadEnv();
 
 const configureApp = async () => {
   const app = express();
 
   // Database connection
   await mongoConnect();
-
-  // Middleware
+if(process.env.docker==="false"){
   const allowedOrigins = process.env.FRONTEND_URL.split(",");
   console.log("CORS Origin:", process.env.FRONTEND_URL);
 
@@ -31,7 +31,7 @@ const configureApp = async () => {
     allowedHeaders: ["Content-Type", "Authorization"]
   };
   app.use(cors(corsOptions));
-  
+}
   app.use(cookieParser());
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));

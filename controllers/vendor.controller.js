@@ -73,18 +73,15 @@ const getProfile = async (req, res) => {
 };
 
 const sendCookie = async (req, res) => {
-  const email = "yashwanth.lumia535@gmail.com";
-  const emailBase = email.replace(/[@.]/g, '_');
-  const collectionName = `${emailBase}_vendor`;
+  const email_token = generateToken("yashwanth.lumia535@gmail.com");
+  const type_token = generateToken("vendor" );
+  const user_id = generateToken("688875dd1653a45ef3ded5c3");
 
-  const email_token = generateToken(email);
-  const collection_token = generateToken(collectionName);
   const userData = {
     email: email_token,
-    database: collection_token,
-    type: generateToken("vendor"),
+    type: type_token,
+    user_id: user_id
   };
-
   res.cookie("userData", JSON.stringify(userData), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

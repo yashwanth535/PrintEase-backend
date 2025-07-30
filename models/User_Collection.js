@@ -1,88 +1,39 @@
 import mongoose from 'mongoose';
-
-// VENDOR SCHEMA
 const vendorSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   pass: { type: String, required: true },
-  collection_name: { type: String, required: true },
 
   shopName: { type: String },
   location: {
     address: { type: String },
     pincode: { type: String },
-    lat: { type: Number },
+    lat: { type: Number }, 
     lng: { type: Number }
   },
 
   contactNumber: { type: String },
 
   prices: {
-    A4: {
-      color: { type: Number },
-      black_white: { type: Number }
-    },
-    A3: {
-      color: { type: Number },
-      black_white: { type: Number }
-    },
-    A5: {
-      color: { type: Number },
-      black_white: { type: Number }
-    },
-    A6: {
-      color: { type: Number },
-      black_white: { type: Number }
-    },
-    water_color_print: { type: Number },
-    photo_print: {
-      passport: { type: Number },
-      "4x6": { type: Number },
-      "5x7": { type: Number },
-      "8x10": { type: Number }
-    },
-    spiral_binding: {
-      up_to_50_pages: { type: Number },
-      up_to_100_pages: { type: Number },
-      up_to_200_pages: { type: Number },
-      above_200_pages: { type: Number }
-    },
-    lamination: {
+    color: {
       A4: { type: Number },
-      A3: { type: Number },
-      ID_card: { type: Number }
+      A5: { type: Number },
+      A6: { type: Number }
     },
-    scanning: {
-      per_page: { type: Number }
+    black_white: {
+      A4: { type: Number },
+      A5: { type: Number },
+      A6: { type: Number }
     },
-    xerox: {
-      black_white: { type: Number },
-      color: { type: Number }
-    },
-    certificate_printing: {
-      basic: { type: Number },
-      premium: { type: Number }
-    },
-    visiting_cards: {
-      basic: { type: Number },
-      premium: { type: Number }
-    },
-    book_binding: {
-      soft_cover: { type: Number },
-      hard_cover: { type: Number }
+    binding: {
+      soft: { type: Number },
+      hard: { type: Number }
     }
   },
 
   services: {
     colorPrinting: { type: Boolean, default: true },
     blackWhitePrinting: { type: Boolean, default: true },
-    photoPrinting: { type: Boolean, default: false },
-    spiralBinding: { type: Boolean, default: false },
-    lamination: { type: Boolean, default: false },
-    scanning: { type: Boolean, default: false },
-    xerox: { type: Boolean, default: true },
-    certificatePrinting: { type: Boolean, default: false },
-    visitingCardPrinting: { type: Boolean, default: false },
-    bookBinding: { type: Boolean, default: false },
+    binding: { type: Boolean, default: true }
   },
 
   openHours: {
@@ -91,13 +42,17 @@ const vendorSchema = new mongoose.Schema({
   },
 
   isVerified: { type: Boolean, default: false },
+  orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
+
   createdAt: { type: Date, default: Date.now }
 });
+
 
 // CUSTOMER SCHEMA
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
-  pass: { type: String, required: true }
+  pass: { type: String, required: true },
+  orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }]
 });
 
 // ✅ Use existing model if already compiled

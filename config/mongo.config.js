@@ -1,8 +1,9 @@
 // config/mongoConnect.js
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 
-dotenv.config();
+import { loadEnv } from './loadenv.js';
+
+loadEnv();
 
 const mongoConnect = async () => {
   const MONGODB_URI = process.env.MONGODB_URI;

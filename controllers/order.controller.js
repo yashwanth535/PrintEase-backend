@@ -146,6 +146,7 @@ const createPaymentOrder = async (req, res) => {
         const totalAmount = orders.reduce((sum, order) => sum + order.totalPrice, 0);
 
         // Create Cashfree payment order
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         const cashfreePayload = {
             order_amount: totalAmount.toFixed(2),
             order_currency: "INR",
@@ -156,7 +157,7 @@ const createPaymentOrder = async (req, res) => {
                 customer_phone: customerDetails.phone || "9999999999"
             },
             order_meta: {
-                return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/u/payment-success?order_id={order_id}`
+                return_url: `${frontendUrl}/u/payment-success?order_id={order_id}`
             }
         };
 
@@ -164,7 +165,7 @@ const createPaymentOrder = async (req, res) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-client-id': process.env.CASHFREE_CLIENT_ID ,
+                'x-client-id': process.env.CASHFREE_CLIENT_ID,
                 'x-client-secret': process.env.CASHFREE_CLIENT_SECRET,
                 'x-api-version': '2025-01-01'
             },

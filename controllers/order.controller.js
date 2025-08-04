@@ -1,6 +1,8 @@
-import {User} from '../models/User_Collection.js';
+import { User, Vendor } from '../models/User_Collection.js';
 import {Order} from '../models/order.js';
+import { sendEmail } from '../utils/email.js';
 import { Cashfree, CFEnvironment } from "cashfree-pg";
+import supabase from '../config/supabase.config.js';
 
 const createOrder = async (req,res) => {
     try{
@@ -31,6 +33,9 @@ const createOrder = async (req,res) => {
         // Add order ID to user's orders array
         user.orders.push(order._id);
         await user.save();
+        
+        // Log entry
+        await User.findByIdAndUpdate(userId, { $push: { logs: { message: `Order ${order._id} created`, createdAt: new Date() } } });
         
         res.status(201).json({
             success: true,
@@ -76,6 +81,33 @@ const getOrders = async (req, res) => {
     }
 }
 
+const getVendorOrders = async (req, res) => {
+    try {
+        const vendorId = req.user.id;
+
+        const vendor = await Vendor.findById(vendorId);
+        if (!vendor) {
+            return res.status(404).json({ success: false, message: 'Vendor not found' });
+        }
+
+        const orders = await Order.find({ vendorId })
+            .populate('userId', 'email')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            orders
+        });
+    } catch (error) {
+        console.error('Error fetching vendor orders:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching vendor orders',
+            error: error.message
+        });
+    }
+};
+
 const deleteOrder = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -107,6 +139,9 @@ const deleteOrder = async (req, res) => {
         // Remove order ID from user's orders array
         user.orders = user.orders.filter(id => id.toString() !== orderId);
         await user.save();
+        
+        // Log entry
+        await User.findByIdAndUpdate(userId, { $push: { logs: { message: `Order ${orderId} deleted`, createdAt: new Date() } } });
         
         res.status(200).json({
             success: true,
@@ -239,6 +274,22 @@ const verifyPayment = async (req, res) => {
                 order.paymentStatus = 'paid';
                 order.paidAt = new Date();
                 await order.save();
+
+                // Log entry for payment
+                await User.findByIdAndUpdate(order.userId, { $push: { logs: { message: `Order ${order._id} paid`, createdAt: new Date() } } });
+
+                // Email user about payment
+                const payUser = await User.findById(order.userId);
+                if(payUser){
+                    await sendEmail({
+                      to: payUser.email,
+                      subject: 'Payment Successful',
+                      text: `Your payment of ₹${order.totalPrice} for order ${order._id} was successful.`
+                    });
+                }
+
+                // Add the order to the corresponding vendor's orders array
+                await Vendor.findByIdAndUpdate(order.vendorId, { $addToSet: { orders: order._id } });
             }
 
             res.status(200).json({
@@ -282,14 +333,52 @@ const updateOrderStatus = async (req, res) => {
         const { orderId } = req.params;
         const { status } = req.body;
         const userId = req.user.id;
+        const userType = req.user.type;
 
-        const order = await Order.findOne({ _id: orderId, userId: userId });
+        let order;
+
+        if (userType === 'vendor') {
+            // Vendor attempting to update status – ensure the order belongs to this vendor
+            order = await Order.findOne({ _id: orderId, vendorId: userId });
+        } else {
+            // Regular user – order must belong to the user
+            order = await Order.findOne({ _id: orderId, userId: userId });
+        }
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
         order.status = status;
         await order.save();
+
+        // If order is completed, delete the file from Supabase
+        if (status === 'completed' && order.fileUrl) {
+            try {
+              const url = new URL(order.fileUrl);
+              const path = url.pathname;
+          
+              // path: /storage/v1/object/public/printease/1754331430796-YASHWANTH-MUNIKUNTLA_odf.pdf
+              const [, , , , , bucketName, ...filePathParts] = path.split('/');
+          
+              // Join path parts and clean leading slashes
+              const rawFilePath = filePathParts.join('/');
+              const cleanedFilePath = rawFilePath.replace(/^\/+/, ''); // Ensure no leading slashes
+          
+              const { error } = await supabase.storage
+                .from(bucketName)
+                .remove([cleanedFilePath]);
+          
+              if (error) {
+                console.error('❌ Error deleting file from Supabase:', error.message);
+              } else {
+                console.log(`✅ File deleted from Supabase: ${bucketName}/${cleanedFilePath}`);
+              }
+            } catch (error) {
+              console.error('❌ Exception during file deletion:', error);
+            }
+          }
+          
+        
 
         res.status(200).json({
             success: true,
@@ -307,4 +396,4 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
-export { createOrder, getOrders, deleteOrder, createPaymentOrder, verifyPayment, updateOrderStatus };
+export { createOrder, getOrders, getVendorOrders, deleteOrder, createPaymentOrder, verifyPayment, updateOrderStatus };

@@ -75,7 +75,7 @@ const getProfile = async (req, res) => {
 const sendCookie = async (req, res) => {
   const email_token = generateToken("yashwanth.lumia535@gmail.com");
   const type_token = generateToken("vendor" );
-  const user_id = generateToken("688875dd1653a45ef3ded5c3");
+  const user_id = generateToken(process.env.vendor_id);
 
   const userData = {
     email: email_token,

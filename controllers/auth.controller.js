@@ -1,7 +1,7 @@
 import { Vendor, User } from '../models/User_Collection.js';
 import { comparePassword, hashPassword } from '../middleware/bcrypt.js';
 import { generateToken, verifyToken } from "../config/jwt.config.js";
-import nodemailer from 'nodemailer';
+import { sendEmail } from '../utils/email.js';
 import mongoose from 'mongoose';
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -133,7 +133,14 @@ const generate_otp=async (req, res) => {
       maxAge: 604800000
   });
 
-  // Email options
+  // Send OTP email
+      await sendEmail({
+        to: email,
+        subject: 'Your PrintEase OTP',
+        text: `${otp}  ${text}\nDo not share with anybody`,
+      });
+
+      // Email options
   // const mailOptions = {
   //   from: '"printease" <verify.printease@gmail.com>', // Corrected email format
   //   to: email, // Recipient's email address

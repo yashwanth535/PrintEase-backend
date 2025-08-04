@@ -52,7 +52,10 @@ const vendorSchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   pass: { type: String, required: true },
-  orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }]
+  orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
+  favourites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' }],
+  logs: [{ message: String, createdAt: { type: Date, default: Date.now } }],
+  notifications: [{ message: String, createdAt: { type: Date, default: Date.now }, read: { type: Boolean, default: false } }]
 });
 
 // ✅ Use existing model if already compiled

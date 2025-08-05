@@ -127,9 +127,9 @@ const generate_otp=async (req, res) => {
   console.log("otp is:" + otp);
   const otp_token = generateToken(otp);
   res.cookie("otp", otp_token, {
-      httpOnly: true, // Secure, prevents XSS
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 604800000
   });
 

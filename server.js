@@ -44,7 +44,7 @@ app.get("/api/ping", (req, res) => {
 app.get('/api/db',checkMongoConnection);
 
 
-if(process.env.docker){
+if(process.env.docker==='true'){
   app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
   app.get('*', (req, res) => {

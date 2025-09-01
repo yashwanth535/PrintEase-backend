@@ -88,4 +88,42 @@ const getLogsNotifications = async (req, res) => {
   }
 };
 
-export { sendCookie, getFavourites, addFavourite, removeFavourite, getLogsNotifications };
+const sendProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id, 'email orders favourites logs notifications createdAt')
+      .populate('favourites', 'shopName email contactNumber location services')
+      .populate('orders', 'status totalAmount createdAt');
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    // Add any additional processing if needed
+    const userProfile = {
+      email: user.email,
+      orders: user.orders || [],
+      favourites: user.favourites || [],
+      logs: user.logs || [],
+      notifications: user.notifications || [],
+      createdAt: user.createdAt
+    };
+
+    res.status(200).json({ 
+      success: true, 
+      user: userProfile 
+    });
+
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching user profile', 
+      error: error.message 
+    });
+  }
+};
+
+export { sendCookie, getFavourites, addFavourite, removeFavourite, getLogsNotifications,sendProfile };

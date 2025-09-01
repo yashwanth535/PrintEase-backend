@@ -287,7 +287,11 @@ const verifyPayment = async (req, res) => {
                       text: `Your payment of ₹${order.totalPrice} for order ${order._id} was successful.`
                     });
                 }
-
+                const monthIndex = new Date().getMonth(); // 0 = Jan, 1 = Feb, ... 11 = Dec
+                    await Vendor.findByIdAndUpdate(order.vendorId, {
+                    $inc: { [`collection.${monthIndex}`]: order.totalPrice }
+                });
+                
                 // Add the order to the corresponding vendor's orders array
                 await Vendor.findByIdAndUpdate(order.vendorId, { $addToSet: { orders: order._id } });
             }

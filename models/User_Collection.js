@@ -43,7 +43,15 @@ const vendorSchema = new mongoose.Schema({
 
   isVerified: { type: Boolean, default: false },
   orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
-
+  collection: {
+    type: [Number],
+    default: Array(12).fill(0),
+    validate: v => v.length === 12
+  },
+  paid: {
+    type: [String],
+    default: [] // example: ["Jan 2024", "Feb 2024"]
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

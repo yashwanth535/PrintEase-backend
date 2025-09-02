@@ -5,9 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target node",
-    "start": "bun run dist/index.js",
+    "dev": "node --watch server.js",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -32,9 +31,7 @@
   },
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
   }
 }

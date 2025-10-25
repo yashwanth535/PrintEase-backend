@@ -1,5 +1,6 @@
 import { Vendor } from "../models/User_Collection.js";
 import { generateToken, verifyToken } from "../config/jwt.config.js";
+import { Order } from '../models/order.js';
 
 const updateProfile = async (req, res) => {
   try {
@@ -92,5 +93,60 @@ const sendCookie = async (req, res) => {
   res.sendStatus(200); // ✅ send only status, no body
 };
 
+const getVendorDashboardStats = async (req, res) => {
+  try {
+    const vendorId = req.user.id;
 
-export { updateProfile, getProfile, sendCookie };
+    const orders = await Order.find({ vendorId });
+
+    const totalOrders = orders.length;
+    const completedOrders = orders.filter(order => order.status === 'completed').length;
+    const pendingOrders = orders.filter(order => order.status !== 'completed' && order.status !== 'cancelled').length;
+
+    const totalEarnings = orders.reduce((sum, order) => sum + order.totalPrice, 0);
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthlyEarnings = orders.reduce((sum, order) => {
+      const orderDate = new Date(order.createdAt);
+      if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+        return sum + order.totalPrice;
+      }
+      return sum;
+    }, 0);
+
+    const averageOrderValue = totalOrders > 0 ? (totalEarnings / totalOrders).toFixed(2) : 0;
+
+    // For popular services, a more complex aggregation would be needed. For now, returning an empty array.
+    const popularServices = []; 
+
+    const recentOrders = orders
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5) // Get the 5 most recent orders
+      .map(order => ({
+        id: order._id,
+        service: order.color ? (order.color + ' printing') : 'B/W printing', // Placeholder for service type
+        status: order.status,
+        amount: order.totalPrice,
+      }));
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalOrders,
+        completedOrders,
+        pendingOrders,
+        totalEarnings,
+        monthlyEarnings,
+        averageOrderValue,
+        popularServices,
+        recentOrders,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching vendor dashboard stats:", error);
+    res.status(500).json({ success: false, message: "Error fetching dashboard stats", error: error.message });
+  }
+};
+
+export { updateProfile, getProfile, sendCookie, getVendorDashboardStats };

@@ -382,7 +382,27 @@ const updateOrderStatus = async (req, res) => {
             }
           }
           
-        
+        if (status === 'completed') {
+          const user = await User.findById(order.userId);
+          if (user) {
+            await sendEmail({
+              to: user.email,
+              subject: 'Your Order is Completed!',
+              text: `Dear ${user.email},
+
+Your order ${orderId} has been successfully completed by the vendor. You can now collect your prints.
+
+Thank you for using PrintEase!
+`,
+              html: `
+                <p>Dear ${user.email},</p>
+                <p>Your order <strong>${orderId}</strong> has been successfully completed by the vendor. You can now collect your prints.</p>
+                <p>Thank you for using PrintEase!</p>
+              `,
+            });
+            console.log(`✅ Order completion email sent to ${user.email} for order ${orderId}`);
+          }
+        }
 
         res.status(200).json({
             success: true,

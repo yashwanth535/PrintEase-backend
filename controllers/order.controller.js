@@ -160,7 +160,7 @@ const deleteOrder = async (req, res) => {
 const createPaymentOrder = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { orderIds, customerDetails } = req.body;
+        const { orderIds } = req.body;
         
         const user = await User.findById(userId);
         if (!user) {
@@ -195,9 +195,9 @@ const createPaymentOrder = async (req, res) => {
             order_currency: "INR",
             customer_details: {
                 customer_id: userId,
-                customer_name: customerDetails.name || "Customer",
-                customer_email: customerDetails.email || user.email,
-                customer_phone: customerDetails.phone || "9999999999"
+                customer_name: user.name,
+                customer_email: user.email, 
+                customer_phone: "0"+user.phone
             },
             order_meta: {
                 return_url: `${process.env.FRONTEND_URL}/u/payment-success?order_id={order_id}`

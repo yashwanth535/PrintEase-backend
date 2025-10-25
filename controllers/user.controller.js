@@ -90,7 +90,7 @@ const getLogsNotifications = async (req, res) => {
 
 const sendProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id, 'email orders favourites logs notifications createdAt')
+    const user = await User.findById(req.user.id, 'email orders favourites logs notifications createdAt name phone')
       .populate('favourites', 'shopName email contactNumber location services')
       .populate('orders', 'status totalAmount createdAt');
     
@@ -100,7 +100,6 @@ const sendProfile = async (req, res) => {
         message: 'User not found' 
       });
     }
-
     // Add any additional processing if needed
     const userProfile = {
       email: user.email,
@@ -108,7 +107,9 @@ const sendProfile = async (req, res) => {
       favourites: user.favourites || [],
       logs: user.logs || [],
       notifications: user.notifications || [],
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      name:user.name,
+      phone:user.phone
     };
 
     res.status(200).json({ 
@@ -126,4 +127,24 @@ const sendProfile = async (req, res) => {
   }
 };
 
-export { sendCookie, getFavourites, addFavourite, removeFavourite, getLogsNotifications,sendProfile };
+const updateProfile = async (req,res)=>{
+  console.log("updated profile triggered");
+  const {name,phone} = req.body;
+  try {
+    const user = await User.findById(req.user.id);
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    
+    // Save the updated user
+    await user.save();
+     res.status(200).json({ 
+      success: true, 
+      message: "Profile updated successfully"
+    });
+  } catch(err){
+    console.error('Error fetching logs:', err);
+    res.status(500).json({ success:false, message:'Error fetching User', error:err.message});
+  }
+}
+
+export { sendCookie, getFavourites, addFavourite, removeFavourite, getLogsNotifications,sendProfile ,updateProfile};

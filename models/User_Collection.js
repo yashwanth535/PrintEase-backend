@@ -58,6 +58,8 @@ const vendorSchema = new mongoose.Schema({
 
 // CUSTOMER SCHEMA
 const userSchema = new mongoose.Schema({
+  name:{ type:String,required:true},
+  phone: { type: String, required: false },
   email: { type: String, required: true, unique: true },
   pass: { type: String, required: true },
   orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],

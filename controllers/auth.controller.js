@@ -187,14 +187,14 @@ const verify_otp=(req,res)=>{
 
 const signUp = async (req, res) => {
   console.log("in signup POST read");
-  const { email, password, isVendor } = req.body;
+  const { email, password, isVendor,fullName,phone } = req.body;
 
   try {
     const hashedPassword = await hashPassword(password);
     let newUser; 
 
     if (isVendor) {
-      newUser = new Vendor({ email: email, pass: hashedPassword });
+      newUser = new Vendor({ email: email, pass: hashedPassword ,name:fullName,phone:phone});
     } else {
       newUser = new User({ email: email, pass: hashedPassword });
     }
@@ -206,7 +206,8 @@ const signUp = async (req, res) => {
     const userData = {
       email: email_token,
       type: type_token,
-      user_id: user_id
+      user_id: user_id,
+      
     };
     
     res.cookie("userData", JSON.stringify(userData), {

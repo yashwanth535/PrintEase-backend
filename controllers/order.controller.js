@@ -179,7 +179,9 @@ const createPaymentOrder = async (req, res) => {
         }
 
         // Calculate total amount
-        const totalAmount = orders.reduce((sum, order) => sum + order.totalPrice, 0);
+        var totalAmount = orders.reduce((sum, order) => sum + order.totalPrice, 0);
+        totalAmount+=totalAmount*0.05;
+        totalAmount=totalAmount.toFixed(2)
 
         // Initialize Cashfree SDK
         const environment = process.env.PROD === 'true' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
@@ -191,7 +193,7 @@ const createPaymentOrder = async (req, res) => {
 
         // Create Cashfree payment order request
         const request = {
-            order_amount: totalAmount.toFixed(2),
+            order_amount: totalAmount,
             order_currency: "INR",
             customer_details: {
                 customer_id: userId,

@@ -65,7 +65,8 @@ const userSchema = new mongoose.Schema({
   orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
   favourites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' }],
   logs: [{ message: String, createdAt: { type: Date, default: Date.now } }],
-  notifications: [{ message: String, createdAt: { type: Date, default: Date.now }, read: { type: Boolean, default: false } }]
+  notifications: [{ message: String, createdAt: { type: Date, default: Date.now }, read: { type: Boolean, default: false } }],
+  createdAt: { type: Date, default: Date.now }
 });
 
 // ✅ Use existing model if already compiled

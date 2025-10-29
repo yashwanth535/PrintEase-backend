@@ -9,15 +9,23 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false, // ✅ Ignore self-signed certs (safe for dev)
+  },
 });
 
 export const sendEmail = async ({ to, subject, text, html }) => {
   if (!to) throw new Error('Email "to" address missing');
-  await transporter.sendMail({
-    from: `PrintEase <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    text,
-    html,
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: `PrintEase <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+      html,
+    });
+    console.log('✅ Email sent:', info.response);
+  } catch (error) {
+    console.error('❌ Error sending email:', error);
+  }
 };

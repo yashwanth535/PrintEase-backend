@@ -240,6 +240,8 @@ const reset_password=async (req,res)=>{
     const hashedPassword = await hashPassword(password);
     user.pass = hashedPassword;
     await user.save();
+
+    
     res.status(200).json({ message: 'Password reset successful' });
 } catch (err) {
   console.error(err);

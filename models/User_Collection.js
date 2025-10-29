@@ -69,8 +69,14 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const adminSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  pass: { type: String, required: true }
+})
+
 // ✅ Use existing model if already compiled
 const Vendor = mongoose.models.Vendor || mongoose.model('Vendor', vendorSchema, 'vendors');
 const User = mongoose.models.User || mongoose.model('User', userSchema, 'users');
+const Admin = mongoose.models.Admin || mongoose.model("Admin",adminSchema,'admins');
 
-export { Vendor, User };
+export { Vendor, User ,Admin };

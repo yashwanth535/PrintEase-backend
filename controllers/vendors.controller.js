@@ -23,13 +23,13 @@ const getLocations = async (req, res) => {
     const vendors = await Vendor.find({}, {
       shopName: 1,
       location: 1,
-      _id: 0
+      _id: 1
     });
     
     const currentVendor = await Vendor.findOne({ email }, {
       shopName: 1,
       location: 1,
-      _id: 0
+      _id: 1
     });
   
     if (!currentVendor) {
@@ -37,9 +37,17 @@ const getLocations = async (req, res) => {
     }
   
     res.json({
-      vendors,
-      currentVendor
-    });
+  vendors: vendors.map(v => ({
+    vendorId: v._id.toString(), // ✅ Send as vendorId
+    shopName: v.shopName,
+    location: v.location
+  })),
+  currentVendor: currentVendor ? {
+    vendorId: currentVendor._id.toString(),
+    shopName: currentVendor.shopName,
+    location: currentVendor.location
+  } : null
+});
   
   } catch (err) {
     console.error("❌ Error fetching vendor locations:", err);

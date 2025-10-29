@@ -278,6 +278,39 @@ const verifyPayment = async (req, res) => {
                 order.paidAt = new Date();
                 await order.save();
 
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth() + 1;
+
+                // Step 1: Ensure year entry exists
+                await VendorEarnings.updateOne(
+                { vendorId: order.vendorId, "earnings.year": year },
+                { $setOnInsert: { "earnings.$.months": [] } },
+                { upsert: true }
+                );
+
+                // Step 2: Add month if missing and increment
+                await VendorEarnings.updateOne(
+                { vendorId: order.vendorId },
+                {
+                    $inc: { "earnings.$[y].months.$[m].totalAmount": order.totalPrice },
+                },
+                {
+                    arrayFilters: [
+                    { "y.year": year },
+                    { "m.month": month },
+                    ],
+                    upsert: true,
+                }
+                );
+
+                // Step 3 (Optional): If month doesn’t exist, push it manually
+                await VendorEarnings.updateOne(
+                { vendorId: order.vendorId, "earnings.year": year, "earnings.months.month": { $ne: month } },
+                { $push: { "earnings.$.months": { month, totalAmount: order.totalPrice, settled: false } } }
+                );
+
+
                 // Log entry for payment
                 await User.findByIdAndUpdate(order.userId, { $push: { logs: { message: `Order ${order._id} paid`, createdAt: new Date() } } });
 

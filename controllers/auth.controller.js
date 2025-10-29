@@ -2,7 +2,7 @@ import { Vendor, User } from '../models/User_Collection.js';
 import { comparePassword, hashPassword } from '../middleware/bcrypt.js';
 import { generateToken, verifyToken } from "../config/jwt.config.js";
 import { sendEmail } from '../utils/email.js';
-import mongoose from 'mongoose';
+import { getPasswordChangedEmailHTML,getNewLoginEmailHTML,getSignupSuccessEmailHTML } from "../utils/mailTemplates.js";
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
@@ -40,6 +40,13 @@ const signIn = async (req, res) => {
           sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
           maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
         });
+
+        const template = getNewLoginEmailHTML(isVendor?"Vendor":"User","https://printease.yashwanth.site");
+        await sendEmail({
+          to: email,
+          subject: 'new Signin Detected',
+          html: template,
+        }); 
 
         res.json({ success: true, email: user.email });
       } else {
@@ -109,13 +116,6 @@ const generate_otp=async (req, res) => {
   console.log("email is "+email);
   console.log("text is "+text);
 
-  // const transporter = nodemailer.createTransport({
-  //   service: 'gmail',
-  //   auth: {
-  //     user: process.env.user,
-  //     pass: process.env.pass, 
-  //   },
-  // });
 
   function generateOTP() {
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -134,30 +134,12 @@ const generate_otp=async (req, res) => {
   });
 
   // Send OTP email
-      await sendEmail({
-        to: email,
-        subject: 'Your PrintEase OTP',
-        text: `${otp}  ${text}\nDo not share with anybody`,
-      });
+  await sendEmail({
+    to: email,
+    subject: 'Your PrintEase OTP',
+    text: `${otp}  ${text}\nDo not share with anybody`,
+  });
 
-      // Email options
-  // const mailOptions = {
-  //   from: '"printease" <verify.printease@gmail.com>', // Corrected email format
-  //   to: email, // Recipient's email address
-  //   subject: 'OTP verification!', // Subject of the email
-  //   text: otp +"  "+text+"\n Do not share with any body", // Plain text body
-  // };
-
-  // Send the email
-  // transporter.sendMail(mailOptions, (error, info) => {
-  //   if (error) {
-  //     console.log("not success");
-  //     console.log(error);
-  //     return res.status(400).json({ message: 'Please enter a valid email address.' });
-  //   }
-  //   console.log("success");
-  //   return res.status(200).json({ message: 'OTP sent successfully' }); // Send a success response
-  // });
   console.log("success");
   return res.status(200).json({ message: 'OTP sent successfully' }); // Send a success response
   
@@ -216,6 +198,13 @@ const signUp = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
     });
+
+    const template = getSignupSuccessEmailHTML(isVendor?"Vendor":"User","https://printease.yashwanth.site");
+    await sendEmail({
+      to: email,
+      subject: 'Registered for Printease',
+      html: template,
+    }); 
     
     res.json({ email: newUser.email, message: 'Registration successful, please login' });
   } catch (err) {
@@ -229,6 +218,7 @@ const signUp = async (req, res) => {
 
 const reset_password=async (req,res)=>{
   const { email, password ,isVendor} = req.body;
+  const type = isVendor?"vendor":"User";
   try {
     let user;
     if(isVendor){
@@ -240,7 +230,13 @@ const reset_password=async (req,res)=>{
     const hashedPassword = await hashPassword(password);
     user.pass = hashedPassword;
     await user.save();
+    const emailHTML = getPasswordChangedEmailHTML(type,"https://printease.yashwanth.site");
 
+    await sendEmail({
+      to: email,
+      subject: '✅ Password Changed Successfully - PrintEase ${type}',
+      html: emailHTML,
+    });
     
     res.status(200).json({ message: 'Password reset successful' });
 } catch (err) {

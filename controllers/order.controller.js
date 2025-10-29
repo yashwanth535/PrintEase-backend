@@ -1,6 +1,7 @@
 import { User, Vendor } from '../models/User_Collection.js';
 import {Order} from '../models/order.js';
 import { sendEmail } from '../utils/email.js';
+import {getOrderCompletedEmailHTML,getPaymentSuccessTemplate} from '../utils/mailTemplates.js'
 import { Cashfree, CFEnvironment } from "cashfree-pg";
 import supabase from '../config/supabase.config.js';
 
@@ -250,8 +251,8 @@ const createPaymentOrder = async (req, res) => {
 
 const verifyPayment = async (req, res) => {
     try {
-        const { orderId } = req.body;
-        
+        const { orderId ,totalAmount} = req.body;
+        var payUser=null;
         // Initialize Cashfree SDK
         const environment = process.env.PROD === 'true' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
         const cashfree = new Cashfree(
@@ -281,14 +282,8 @@ const verifyPayment = async (req, res) => {
                 await User.findByIdAndUpdate(order.userId, { $push: { logs: { message: `Order ${order._id} paid`, createdAt: new Date() } } });
 
                 // Email user about payment
-                const payUser = await User.findById(order.userId);
-                if(payUser){
-                    await sendEmail({
-                      to: payUser.email,
-                      subject: 'Payment Successful',
-                      text: `Your payment of ₹${order.totalPrice} for order ${order._id} was successful.`
-                    });
-                }
+                payUser = await User.findById(order.userId);
+                
                 const monthIndex = new Date().getMonth(); // 0 = Jan, 1 = Feb, ... 11 = Dec
                     await Vendor.findByIdAndUpdate(order.vendorId, {
                     $inc: { [`collection.${monthIndex}`]: order.totalPrice }
@@ -297,6 +292,16 @@ const verifyPayment = async (req, res) => {
                 // Add the order to the corresponding vendor's orders array
                 await Vendor.findByIdAndUpdate(order.vendorId, { $addToSet: { orders: order._id } });
             }
+            console.log(totalAmount);
+            const emailHTML = getPaymentSuccessTemplate(Number(totalAmount), orderId);
+            
+            if(payUser){
+                    await sendEmail({
+                      to: payUser.email,
+                      subject: 'Payment Successful - printease',
+                      html: emailHTML,
+                    });
+                }
 
             res.status(200).json({
                 success: true,
@@ -385,26 +390,22 @@ const updateOrderStatus = async (req, res) => {
           }
           
         if (status === 'completed') {
-          const user = await User.findById(order.userId);
-          if (user) {
-            await sendEmail({
-              to: user.email,
-              subject: 'Your Order is Completed!',
-              text: `Dear ${user.email},
+            const user = await User.findById(order.userId);
+            const vendor = await Vendor.findById(order.vendorId);
 
-Your order ${orderId} has been successfully completed by the vendor. You can now collect your prints.
+            if (user && vendor) {
+                const html = getOrderCompletedEmailHTML(user.email, vendor.email, order);
 
-Thank you for using PrintEase!
-`,
-              html: `
-                <p>Dear ${user.email},</p>
-                <p>Your order <strong>${orderId}</strong> has been successfully completed by the vendor. You can now collect your prints.</p>
-                <p>Thank you for using PrintEase!</p>
-              `,
-            });
-            console.log(`✅ Order completion email sent to ${user.email} for order ${orderId}`);
-          }
+                await sendEmail({
+                to: user.email,
+                subject: 'Your Order Has Been Completed 🎉',
+                html
+                });
+
+                console.log(`✅ Order completion email sent to ${user.email} for order ${order._id}`);
+            }
         }
+
 
         res.status(200).json({
             success: true,

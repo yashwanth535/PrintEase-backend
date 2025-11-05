@@ -66,7 +66,7 @@ const getOrders = async (req, res) => {
         const orders = await Order.find({ _id: { $in: user.orders } })
             .populate('vendorId', 'shopName location contactNumber')
             .sort({ createdAt: -1 }); // Sort by newest first
-        
+        console.log("succesfully fetched");
         res.status(200).json({
             success: true,
             message: 'Orders fetched successfully',

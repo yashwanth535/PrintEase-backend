@@ -66,7 +66,12 @@ const addFavourite = async (req, res) => {
 const removeFavourite = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { vendorId } = req.params;
+    // Support both params (web) and body (mobile)
+    const vendorId = req.params.vendorId || req.body.vendorId;
+
+    if (!vendorId) {
+      return res.status(400).json({ success: false, message: 'VendorId is required' });
+    }
 
     await User.findByIdAndUpdate(userId, { $pull: { favourites: vendorId } });
     const user = await User.findById(userId).populate('favourites');

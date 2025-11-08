@@ -1,0 +1,231 @@
+[33mcommit 530869114da483bfe719ff49cecde49ff5199822[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Thu Nov 6 01:35:27 2025 +0530
+
+    backend changed for mobile application
+
+[33mcommit d989d28c09a65a87b14e5936f26dd480dc7b9589[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Thu Oct 30 02:51:11 2025 +0530
+
+    vendor maps added
+
+[33mcommit 7ffebc5066be06ca899f2690455e10b71bd321de[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Oct 29 18:08:07 2025 +0530
+
+    add new Email Templates
+
+[33mcommit 861ef486075bf0715e8b59453b0aeeead31e5b17[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Oct 29 13:47:27 2025 +0530
+
+    added admin portal
+
+[33mcommit 023caefbf9c4c855604646fb6fd0fea72f4c4139[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Oct 28 22:25:27 2025 +0530
+
+    corntrollers changed
+
+[33mcommit aef27119318e26985704f4fb14f3ab765bd9b7fd[m
+Merge: 8c54a75 4a52b10
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Sat Oct 25 22:36:09 2025 +0530
+
+    Merge branch 'main' of https://github.com/yashwanth535/PrintEase-backend
+
+[33mcommit 8c54a75b9df6503177ca5681ecdd9a8941901177[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Sat Oct 25 22:35:34 2025 +0530
+
+    added toast,user profile update
+
+[33mcommit 4a52b10c0c20d28f5e0b7b6133606aa97be7f88e[m
+Merge: ff8f03e 9bafe7e
+Author: Yashwanth Munikuntla <yashwanth.lumia535@gmail.com>
+Date:   Tue Sep 2 23:14:40 2025 +0530
+
+    merge branch vignesh
+    
+    added the google maps,user notificagtion
+
+[33mcommit 9bafe7e9182dc527e84ab64886d13590ae1fe06c[m
+Author: sai-vigneshwar <saivigneshwar1019@gmail.com>
+Date:   Tue Sep 2 23:09:22 2025 +0530
+
+    added the google maps,user notificagtion
+
+[33mcommit ff8f03e6dba15e0213e452790772036c9b2315ca[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Mon Sep 1 22:06:28 2025 +0530
+
+    new routes
+
+[33mcommit 2181b647bf6809c16457fb63e9b3f0ed62a9c741[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Aug 5 20:07:21 2025 +0530
+
+    cookie problem
+
+[33mcommit 1297c6f4517ee4b4599c5caa3112bcad78a8cb0d[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Aug 5 19:17:54 2025 +0530
+
+    docker error
+
+[33mcommit a59d9e5e6251bf2935c460258dd6d821a5bdee59[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Mon Aug 4 23:58:03 2025 +0530
+
+    delete file
+
+[33mcommit 27acac5e223be91dc40d2bb9facba052774f67a4[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Jul 30 21:59:34 2025 +0530
+
+    payment gateway production
+
+[33mcommit 164f462af5ec57e41963e5073edf097a143f9481[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Jul 30 21:42:20 2025 +0530
+
+    production gateway
+
+[33mcommit bc76ba3f6dd0efdd6934833cf43f691952130fa0[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Jul 30 19:43:05 2025 +0530
+
+    4th
+
+[33mcommit 0c217a8cf67ae150502d669775172b725e5fc318[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Jul 30 19:00:17 2025 +0530
+
+    new commit
+
+[33mcommit f87cecb4e7adf493498addb4c4ab0fc23bd759eb[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Jul 30 18:55:48 2025 +0530
+
+    FIX:safe api Key
+
+[33mcommit 25039768c48d762688a588fa40031e8b2e0d99c5[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Jul 30 18:52:58 2025 +0530
+
+    fix:workign payment gateway in local
+
+[33mcommit c7149b98690ace78908d2259f2e23b0f47a17a6c[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Wed Jul 30 14:01:40 2025 +0530
+
+    normal push after docker
+
+[33mcommit 005b94171b8b847f3e094ab30442fe6182a92244[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Sat Jul 26 20:48:25 2025 +0530
+
+    common js to esm
+
+[33mcommit 0306c3058db451ac8fd2c4fa7d1b7835b48a1405[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Fri Jul 25 17:04:27 2025 +0530
+
+    CHECKPOINT:file upload
+
+[33mcommit 8c89d8daf01bc9dbcea587a3e51c1190a2b1010c[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Fri Jul 25 16:15:34 2025 +0530
+
+    working upload functionality
+
+[33mcommit 2a7ee4e1b5df456a72cd17b7a1271b235f53786e[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Thu Jul 24 22:34:47 2025 +0530
+
+    dev login and file upload
+
+[33mcommit eeafb3a1dace34183a9213e83fe14a490700cb6d[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Thu Jul 24 22:34:41 2025 +0530
+
+    dev login and file upload
+
+[33mcommit 1e8b41f65a010436c24bd87d0b37458e309974ab[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Jul 22 21:26:24 2025 +0530
+
+    config change
+
+[33mcommit 9d953f58358110cf78fd31ecd371642121721ea8[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Jul 22 20:27:36 2025 +0530
+
+    multiple frontends
+
+[33mcommit 5a5f9b38f8cfb8296d373bfd377a557419c3aade[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Jul 22 20:21:25 2025 +0530
+
+    google maps
+
+[33mcommit fc03c9bfc9a60699d769addb524c2caf7210b446[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Jun 24 02:06:15 2025 +0530
+
+    ping added
+
+[33mcommit 6ce72db3a3c88e926aad1cce26021ecf1ce94476[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Sat Mar 1 17:17:02 2025 +0530
+
+    "seperate Routing for different roles"
+
+[33mcommit c19fa55ee45f8bbc5b53f228c8e9147db0b9c57a[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Feb 25 23:46:59 2025 +0530
+
+    "added auth for both customer and vendor"
+
+[33mcommit 47f7133983e47b69fdeba5d31b1779e497aa00a4[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Feb 25 00:32:40 2025 +0530
+
+    "cors rectification attempt2"
+
+[33mcommit 0ce3dc47e6121b44b940d1b36b04084d160ea59e[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Feb 25 00:27:13 2025 +0530
+
+    "cors recification attemp1"
+
+[33mcommit f7ecacf831f2ebc22d9ac0cbe50ae1d0fa318332[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Tue Feb 25 00:05:24 2025 +0530
+
+    "changed from express session to jwt tokens"
+
+[33mcommit b29098a28cb1028afddce70adb5209476201f99e[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Mon Feb 24 19:19:51 2025 +0530
+
+    "added auth api routes"
+
+[33mcommit 2d4faa0791391a25b59dec2278c6cf63bb25147d[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Thu Feb 20 02:40:56 2025 +0530
+
+    api testing
+
+[33mcommit 2632e6cfdff504a98393943e2ba2fb23dda50cd2[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Thu Feb 20 02:10:27 2025 +0530
+
+    added vercel.json
+
+[33mcommit 3f5d1fdc5f947a95dd0458c4e1fd1b826ccf1efc[m
+Author: yashwanth535 <yashwanth.lumia535@gmail.com>
+Date:   Thu Feb 20 02:03:08 2025 +0530
+
+    first commit

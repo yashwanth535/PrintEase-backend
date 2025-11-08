@@ -112,7 +112,12 @@ const getVendorOrders = async (req, res) => {
 const deleteOrder = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { orderId } = req.params;
+        // Support both params (web) and body (mobile)
+        const orderId = req.params.orderId || req.body.orderId;
+        
+        if (!orderId) {
+            return res.status(400).json({ success: false, message: 'OrderId is required' });
+        }
         
         const user = await User.findById(userId);
         if (!user) {
@@ -161,7 +166,7 @@ const deleteOrder = async (req, res) => {
 const createPaymentOrder = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { orderIds } = req.body;
+        const { orderIds, returnUrl } = req.body; // Accept returnUrl from mobile
         
         const user = await User.findById(userId);
         if (!user) {
@@ -192,6 +197,9 @@ const createPaymentOrder = async (req, res) => {
             process.env.CASHFREE_CLIENT_SECRET
         );
 
+        // Use mobile returnUrl if provided, otherwise use web URL
+        const paymentReturnUrl = returnUrl || `${ (process.env.PROD === 'true' ?process.env.FRONTEND_URL:process.env.production_URL)}/u/payment-success?order_id={order_id}`;
+
         // Create Cashfree payment order request
         const request = {
             order_amount: totalAmount,
@@ -203,7 +211,7 @@ const createPaymentOrder = async (req, res) => {
                 customer_phone: "0"+user.phone
             },
             order_meta: {
-                return_url: `${process.env.FRONTEND_URL}/u/payment-success?order_id={order_id}`
+                return_url: paymentReturnUrl
             },
             order_note: `PrintEase order for ${orders.length} items`
         };
@@ -211,6 +219,9 @@ const createPaymentOrder = async (req, res) => {
         // Create order using Cashfree SDK
         const response = await cashfree.PGCreateOrder(request);
         const cashfreeData = response.data;
+
+        // Log the full Cashfree response for debugging
+        console.log('Cashfree Order Response:', JSON.stringify(cashfreeData, null, 2));
 
         // Store payment details in orders
         for (let order of orders) {
@@ -220,14 +231,23 @@ const createPaymentOrder = async (req, res) => {
             await order.save();
         }
 
-        res.status(200).json({
+        // Cashfree might return a payment_link in the response - use it if available
+        // Otherwise, construct the URL on the client side
+        const responseData = {
             success: true,
             message: 'Payment order created successfully',
             paymentSessionId: cashfreeData.payment_session_id,
             orderId: cashfreeData.order_id,
             cfOrderId: cashfreeData.cf_order_id,
             amount: totalAmount
-        });
+        };
+
+        // Include payment_link if Cashfree provides it
+        if (cashfreeData.payment_link) {
+            responseData.paymentLink = cashfreeData.payment_link;
+        }
+
+        res.status(200).json(responseData);
 
     } catch (error) {
         console.error('Error creating payment order:', error);

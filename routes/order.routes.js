@@ -13,7 +13,8 @@ router.put('/update-status/:orderId', authMiddleware, updateOrderStatus);
 
 router.post('/mobile', mobileMiddleware, getOrders);
 router.post('/mobile/create',mobileMiddleware,createOrder);
-router.delete('/mobile/:orderId', mobileMiddleware, deleteOrder);
+router.post('/mobile/delete/:orderId', mobileMiddleware, deleteOrder);
+router.post('/mobile/delete', mobileMiddleware, deleteOrder);
 router.post('/mobile/create-payment', mobileMiddleware, createPaymentOrder);
 router.post('/mobile/verify-payment', mobileMiddleware, verifyPayment);
 router.put('/mobile/update-status/:orderId', mobileMiddleware, updateOrderStatus);

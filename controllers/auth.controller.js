@@ -268,6 +268,78 @@ const is_Authenticated = async (req, res) => {
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
+import { OAuth2Client }  from "google-auth-library";
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const google_signin = async (req, res) => {
+  console.log("inside google signin");
+  try {
+    const { credential,isVendor} = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: "Google credential is required" });
+    }
+
+    // Verify the Google token
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      return res.status(400).json({ message: "Invalid Google token" });
+    }
+
+    const { sub: googleId, email, name, picture } = payload;
+
+    let user;
+    if (isVendor) {
+      user = await Vendor.findOne({ email });
+    } else {
+      user = await User.findOne({ email });
+    }
+
+    if (!user) {
+      return res.json({ success: false, message: "Can't find email" });
+    }
+
+    
+    const email_token = generateToken(email);
+    const type_token = generateToken(isVendor ? "vendor" : "user");
+    const user_id = generateToken(user._id);
+
+    const userData = {
+      email: email_token,
+      type: type_token,
+      user_id: user_id
+    };
+
+    // ✅ 1. Set cookie for web clients
+    setAuthCookie(res, userData);
+    const template = getNewLoginEmailHTML(isVendor ? "Vendor" : "User", "https://printease.yashwanth.site");
+    await sendEmail({
+      to: email,
+      subject: 'New Signin Detected',
+      html: template,
+    });
+
+    return res.json({
+      success: true,
+      message: "Signin successful",
+      tokens: userData, // for mobile
+      email: user.email,
+      role: isVendor ? "vendor" : "user"
+    });
+
+  } catch (error) {
+    console.error("Google authentication error:", error);
+    return res.status(500).json({ success: false, message: "Server error during authentication" });
+  }
+};
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+
 export {
   signIn,
   signUp,
@@ -277,4 +349,5 @@ export {
   verify_otp,
   reset_password,
   is_Authenticated,
+  google_signin
 };

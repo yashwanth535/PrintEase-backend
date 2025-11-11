@@ -190,11 +190,23 @@ const createPaymentOrder = async (req, res) => {
         totalAmount=totalAmount.toFixed(2)
 
         // Initialize Cashfree SDK
-        const environment = process.env.PROD === 'true' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+        const environment = process.env.PROD === "true"
+        ? CFEnvironment.PRODUCTION
+        : CFEnvironment.SANDBOX;
+
+      // Pick credentials based on environment
+      const clientId = process.env.PROD === "true"
+        ? process.env.CASHFREE_LIVE_CLIENT_ID
+        : process.env.CASHFREE_CLIENT_ID;
+
+      const clientSecret = process.env.PROD === "true"
+        ? process.env.CASHFREE_LIVE_CLIENT_SECRET
+        : process.env.CASHFREE_CLIENT_SECRET;
+
         const cashfree = new Cashfree(
             environment,
-            process.env.CASHFREE_CLIENT_ID,
-            process.env.CASHFREE_CLIENT_SECRET
+            clientId,
+            clientSecret
         );
 
         // Use mobile returnUrl if provided, otherwise use web URL
@@ -268,149 +280,157 @@ const createPaymentOrder = async (req, res) => {
         });
     }
 };
-
 const verifyPayment = async (req, res) => {
-    try {
-        const { orderId ,totalAmount} = req.body;
-        var payUser=null;
-        // Initialize Cashfree SDK
-        const environment = process.env.PROD === 'true' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
-        const cashfree = new Cashfree(
-            environment,
-            process.env.CASHFREE_CLIENT_ID,
-            process.env.CASHFREE_CLIENT_SECRET
-        );
+  try {
+    const { orderId, totalAmount } = req.body;
+    let payUser = null;
 
-        // Verify payment with Cashfree SDK
-        const response = await cashfree.PGFetchOrder(orderId);
-        const cashfreeData = response.data;
+    const environment = process.env.PROD === "true"
+      ? CFEnvironment.PRODUCTION
+      : CFEnvironment.SANDBOX;
 
-        // Check if payment is successful
-        const isPaid = cashfreeData.order_status === 'PAID';
+    // Pick credentials based on environment
+    const clientId = process.env.PROD === "true"
+      ? process.env.CASHFREE_LIVE_CLIENT_ID
+      : process.env.CASHFREE_CLIENT_ID;
 
-        if (isPaid) {
-            // Update all orders with this payment order ID
-            const orders = await Order.find({ paymentOrderId: orderId });
-            
-            for (let order of orders) {
-                order.status = 'accepted';
-                order.paymentStatus = 'paid';
-                order.paidAt = new Date();
-                await order.save();
+    const clientSecret = process.env.PROD === "true"
+      ? process.env.CASHFREE_LIVE_CLIENT_SECRET
+      : process.env.CASHFREE_CLIENT_SECRET;
+      
+    const cashfree = new Cashfree(
+        environment,
+        clientId,
+        clientSecret
+    );
 
-                // Update Vendor Earnings
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = now.getMonth() + 1;
+    // STEP 1: Verify payment status from Cashfree
+    const response = await cashfree.PGFetchOrder(orderId);
+    const cashfreeData = response.data;
+    const isPaid = cashfreeData.order_status === "PAID";
 
-                await Vendor.updateOne(
-                {
-                    _id: order.vendorId,
-                    "earnings.year": year
-                },
-                {
-                    $setOnInsert: { earnings: [{ year, months: [] }] }
-                },
-                { upsert: true }
-                );
-
-                await Vendor.updateOne(
-                {
-                    _id: order.vendorId,
-                    "earnings.year": year,
-                    "earnings.months.month": month
-                },
-                {
-                    $inc: { "earnings.$[y].months.$[m].totalAmount": order.totalPrice },
-                    $set: { "earnings.$[y].months.$[m].lastUpdated": new Date() }
-                },
-                {
-                    arrayFilters: [
-                    { "y.year": year },
-                    { "m.month": month }
-                    ]
-                }
-                );
-
-                await Vendor.updateOne(
-                {
-                    _id: order.vendorId,
-                    "earnings.year": year,
-                    "earnings.months.month": { $ne: month }
-                },
-                {
-                    $push: {
-                    "earnings.$.months": {
-                        month,
-                        totalAmount: order.totalPrice,
-                        settled: false,
-                        lastUpdated: new Date()
-                    }
-                    }
-                }
-                );
-
-
-                // Log entry for payment
-                await User.findByIdAndUpdate(order.userId, { $push: { logs: { message: `Order ${order._id} paid`, createdAt: new Date() } } });
-
-                // Email user about payment
-                payUser = await User.findById(order.userId);
-                
-                const monthIndex = new Date().getMonth(); // 0 = Jan, 1 = Feb, ... 11 = Dec
-                    await Vendor.findByIdAndUpdate(order.vendorId, {
-                    $inc: { [`collection.${monthIndex}`]: order.totalPrice }
-                });
-                
-                // Add the order to the corresponding vendor's orders array
-                await Vendor.findByIdAndUpdate(order.vendorId, { $addToSet: { orders: order._id } });
-            }
-            console.log(totalAmount);
-            const emailHTML = getPaymentSuccessTemplate(Number(totalAmount), orderId);
-            
-            if(payUser){
-                    await sendEmail({
-                      to: payUser.email,
-                      subject: 'Payment Successful - printease',
-                      html: emailHTML,
-                    });
-                }
-
-            res.status(200).json({
-                success: true,
-                message: 'Payment verified successfully',
-                isPaid: true,
-                orderStatus: cashfreeData.order_status,
-                ordersUpdated: orders.length
-            });
-        } else {
-            res.status(200).json({
-                success: true,
-                message: 'Payment not completed',
-                isPaid: false,
-                orderStatus: cashfreeData.order_status
-            });
-        }
-
-    } catch (error) {
-        console.error('Error verifying payment:', error);
-        
-        // Handle Cashfree SDK specific errors
-        if (error.response && error.response.data) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Payment verification failed',
-                error: error.response.data
-            });
-        }
-        
-        res.status(500).json({
-            success: false,
-            message: 'Error verifying payment',
-            error: error.message
-        });
+    if (!isPaid) {
+      return res.status(200).json({
+        success: true,
+        message: "Payment not completed",
+        isPaid: false,
+        orderStatus: cashfreeData.order_status,
+      });
     }
+
+    // STEP 2: Find orders with this payment orderId
+    const orders = await Order.find({ paymentOrderId: orderId });
+
+    for (let order of orders) {
+      order.status = "accepted";
+      order.paymentStatus = "paid";
+      order.paidAt = new Date();
+      await order.save();
+
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1; // 1–12
+
+      // Ensure earnings entry for this year exists
+      await Vendor.updateOne(
+        { _id: order.vendorId, "earnings.year": { $ne: year } },
+        { $push: { earnings: { year, months: [] } } }
+      );
+
+      // If month exists → increment
+      await Vendor.updateOne(
+        {
+          _id: order.vendorId,
+          "earnings.year": year,
+          "earnings.months.month": month,
+        },
+        {
+          $inc: { "earnings.$[y].months.$[m].totalAmount": order.totalPrice },
+          $set: { "earnings.$[y].months.$[m].lastUpdated": new Date() },
+        },
+        {
+          arrayFilters: [
+            { "y.year": year },
+            { "m.month": month },
+          ],
+        }
+      );
+
+      // If month does NOT exist → create it
+      await Vendor.updateOne(
+        {
+          _id: order.vendorId,
+          "earnings.year": year,
+          "earnings.months.month": { $ne: month },
+        },
+        {
+          $push: {
+            "earnings.$.months": {
+              month,
+              totalAmount: order.totalPrice,
+              settled: false,
+              lastUpdated: new Date(),
+            },
+          },
+        }
+      );
+
+      // Log in user document
+      await User.findByIdAndUpdate(order.userId, {
+        $push: { logs: { message: `Order ${order._id} paid`, createdAt: new Date() } },
+      });
+
+      // Track vendor collection per month (separate stats)
+      const monthIndex = now.getMonth(); // 0–11
+      await Vendor.findByIdAndUpdate(order.vendorId, {
+        $inc: { [`collection.${monthIndex}`]: order.totalPrice },
+      });
+
+      // Ensure vendor has reference to this order
+      await Vendor.findByIdAndUpdate(order.vendorId, {
+        $addToSet: { orders: order._id },
+      });
+
+      payUser = await User.findById(order.userId);
+    }
+
+    // STEP 3: Email receipt to user
+    if (payUser) {
+      const emailHTML = getPaymentSuccessTemplate(Number(totalAmount), orderId);
+      await sendEmail({
+        to: payUser.email,
+        subject: "Payment Successful - PrintEase",
+        html: emailHTML,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment verified successfully",
+      isPaid: true,
+      orderStatus: cashfreeData.order_status,
+      ordersUpdated: orders.length,
+    });
+
+  } catch (error) {
+    console.error("Error verifying payment:", error);
+
+    if (error.response?.data) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed",
+        error: error.response.data,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Error verifying payment",
+      error: error.message,
+    });
+  }
 };
+
 
 const updateOrderStatus = async (req, res) => {
     try {

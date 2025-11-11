@@ -298,36 +298,56 @@ const verifyPayment = async (req, res) => {
                 order.paidAt = new Date();
                 await order.save();
 
+                // Update Vendor Earnings
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = now.getMonth() + 1;
 
-                // Step 1: Ensure year entry exists
-                await VendorEarnings.updateOne(
-                { vendorId: order.vendorId, "earnings.year": year },
-                { $setOnInsert: { "earnings.$.months": [] } },
+                await Vendor.updateOne(
+                {
+                    _id: order.vendorId,
+                    "earnings.year": year
+                },
+                {
+                    $setOnInsert: { earnings: [{ year, months: [] }] }
+                },
                 { upsert: true }
                 );
 
-                // Step 2: Add month if missing and increment
-                await VendorEarnings.updateOne(
-                { vendorId: order.vendorId },
+                await Vendor.updateOne(
+                {
+                    _id: order.vendorId,
+                    "earnings.year": year,
+                    "earnings.months.month": month
+                },
                 {
                     $inc: { "earnings.$[y].months.$[m].totalAmount": order.totalPrice },
+                    $set: { "earnings.$[y].months.$[m].lastUpdated": new Date() }
                 },
                 {
                     arrayFilters: [
                     { "y.year": year },
-                    { "m.month": month },
-                    ],
-                    upsert: true,
+                    { "m.month": month }
+                    ]
                 }
                 );
 
-                // Step 3 (Optional): If month doesn’t exist, push it manually
-                await VendorEarnings.updateOne(
-                { vendorId: order.vendorId, "earnings.year": year, "earnings.months.month": { $ne: month } },
-                { $push: { "earnings.$.months": { month, totalAmount: order.totalPrice, settled: false } } }
+                await Vendor.updateOne(
+                {
+                    _id: order.vendorId,
+                    "earnings.year": year,
+                    "earnings.months.month": { $ne: month }
+                },
+                {
+                    $push: {
+                    "earnings.$.months": {
+                        month,
+                        totalAmount: order.totalPrice,
+                        settled: false,
+                        lastUpdated: new Date()
+                    }
+                    }
+                }
                 );
 
 

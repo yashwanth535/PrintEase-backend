@@ -8,6 +8,8 @@ import { checkMongoConnection } from "./config/mongo.config.js";
 import userRoutes from "./routes/user.routes.js";
 import path from 'path';
 import { fileURLToPath } from 'url'; // If using ES modules
+import supabase from './config/supabase.config.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -44,6 +46,22 @@ app.get("/api/ping", (req, res) => {
 
 app.get('/api/db',checkMongoConnection);
 
+app.get('/api/supabase', async (req, res) => {
+  try {
+    const { data, error } = await supabase.auth.admin.listUsers({ limit: 1 });
+
+    if (error) {
+      return res.status(400).json({ error });
+    }
+
+    return res.json({
+      message: "Supabase response",
+      users: data
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 if(process.env.docker==='true'){
   app.use(express.static(path.join(__dirname, '../frontend/dist')));

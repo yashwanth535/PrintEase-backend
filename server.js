@@ -54,14 +54,17 @@ app.get('/api/supabase', async (req, res) => {
       return res.status(400).json({ error });
     }
 
+    // extract only emails
+    const emails = data.users.map(user => user.email);
+
     return res.json({
-      message: "Supabase response",
-      users: data
+      emails
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 });
+
 
 if(process.env.docker==='true'){
   app.use(express.static(path.join(__dirname, '../frontend/dist')));

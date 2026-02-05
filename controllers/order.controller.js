@@ -203,6 +203,10 @@ const createPaymentOrder = async (req, res) => {
         ? process.env.CASHFREE_LIVE_CLIENT_SECRET
         : process.env.CASHFREE_CLIENT_SECRET;
 
+        console.log("environment:"+environment);
+        console.log("id:"+clientId);
+        console.log("secret:"+clientSecret);
+        
         const cashfree = new Cashfree(
             environment,
             clientId,

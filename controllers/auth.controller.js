@@ -158,16 +158,22 @@ const verify_otp = (req, res) => {
 // ---------------------------------------------------------------------------------------------------------------------------------------
 const signUp = async (req, res) => {
   console.log("in signup POST read");
-  const { email, password, isVendor, fullName, phone } = req.body;
+  const { email, password, isVendor, phone } = req.body;
+  // Accept both 'name' and 'fullName' (JSON.stringify drops undefined, so frontend may send either)
+  const name = (req.body.name ?? req.body.fullName ?? '').trim();
+
+  if (!name) {
+    return res.status(400).json({ success: false, message: 'Name is required' });
+  }
 
   try {
     const hashedPassword = await hashPassword(password);
     let newUser;
 
     if (isVendor) {
-      newUser = new Vendor({ email, pass: hashedPassword, name: fullName, phone });
+      newUser = new Vendor({ email, pass: hashedPassword, name, phone });
     } else {
-      newUser = new User({ email, pass: hashedPassword });
+      newUser = new User({ email, pass: hashedPassword, name, phone });
     }
 
     await newUser.save();
@@ -198,7 +204,7 @@ const signUp = async (req, res) => {
 
   } catch (err) {
     console.error('Error during registration:', err);
-    res.status(500).send('Internal Server Error');
+    res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
   }
 };
 
@@ -206,19 +212,18 @@ const signUp = async (req, res) => {
 const reset_password = async (req, res) => {
   const { email, password, isVendor } = req.body;
   const type = isVendor ? "Vendor" : "User";
+  const Model = isVendor ? Vendor : User;
 
   try {
-    const user = isVendor 
-      ? await Vendor.findOne({ email }) 
-      : await User.findOne({ email });
+    const user = await Model.findOne({ email });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     const hashedPassword = await hashPassword(password);
-    user.pass = hashedPassword;
-    await user.save();
+    // Update only password to avoid re-validating the whole document (e.g. legacy users missing 'name')
+    await Model.updateOne({ email }, { $set: { pass: hashedPassword } });
 
     const emailHTML = getPasswordChangedEmailHTML(type, "https://printease.yashwanth.site");
     await sendEmail({

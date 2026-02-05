@@ -9,6 +9,7 @@ import userRoutes from "./routes/user.routes.js";
 import path from 'path';
 import { fileURLToPath } from 'url'; // If using ES modules
 import supabase from './config/supabase.config.js';
+import bugReportRoutes from "./routes/bugreport.routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +35,7 @@ app.use('/api/user',userRoutes);
 app.use('/api/vendors',vendorsRoutes);
 app.use('/api/order',orderRoutes);
 app.use('/api/admin/auth',adminAuthRoutes);
+app.use('/api/bugreport',bugReportRoutes);
 
 app.get("/ping", (req, res) => {
   res.status(204).end(); 

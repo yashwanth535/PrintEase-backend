@@ -166,7 +166,7 @@ const deleteOrder = async (req, res) => {
 const createPaymentOrder = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { orderIds, returnUrl } = req.body; // Accept returnUrl from mobile
+        const { orderIds, returnUrl,baseUrl } = req.body; // Accept returnUrl from mobile
         
         const user = await User.findById(userId);
         if (!user) {
@@ -206,7 +206,7 @@ const createPaymentOrder = async (req, res) => {
         console.log("environment:"+environment);
         console.log("id:"+clientId);
         console.log("secret:"+clientSecret);
-        
+
         const cashfree = new Cashfree(
             environment,
             clientId,
@@ -214,7 +214,7 @@ const createPaymentOrder = async (req, res) => {
         );
 
         // Use mobile returnUrl if provided, otherwise use web URL
-        const paymentReturnUrl = returnUrl || `${ (process.env.PROD === 'true' ?process.env.FRONTEND_URL:process.env.production_URL)}/u/payment-success?order_id={order_id}`;
+        const paymentReturnUrl = returnUrl || `${baseUrl}/u/payment-success?order_id={order_id}`;
 
         // Create Cashfree payment order request
         const request = {
